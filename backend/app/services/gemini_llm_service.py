@@ -261,7 +261,7 @@ class GeminiLLMService:
                 )
                 analysis_result = response.dict() if hasattr(response, 'dict') else response.model_dump()
             else:
-                # Fallback to standard Gemini API with JSON schema
+                # Fallback to standard Gemini API without response schema due to $defs compatibility issue
                 response = self.client.generate_content(
                     f"""You are a cybersecurity expert. {enhanced_prompt}
                     
@@ -287,10 +287,7 @@ class GeminiLLMService:
                         "prerequisites": ["list", "of", "prerequisites"],
                         "compliance_impact": ["frameworks", "affected"]
                     }}""",
-                    generation_config=genai.GenerationConfig(
-                        temperature=0.3,
-                        response_schema=VulnerabilityAnalysis.model_json_schema()
-                    )
+                    generation_config=genai.GenerationConfig(temperature=0.3)
                 )
                 analysis_result = self._parse_gemini_response(response.text)
             
@@ -354,11 +351,18 @@ class GeminiLLMService:
                 return response.dict() if hasattr(response, 'dict') else response.model_dump()
             else:
                 response = self.client.generate_content(
-                    f"""You are a business risk analyst. {enhanced_prompt}""",
-                    generation_config=genai.GenerationConfig(
-                        temperature=0.3,
-                        response_schema=BusinessImpactAnalysis.model_json_schema()
-                    )
+                    f"""You are a business risk analyst. {enhanced_prompt}
+                    
+                    Respond with a JSON object with these fields:
+                    {{
+                        "financial_impact": "potential financial losses",
+                        "operational_impact": "impact on operations",
+                        "reputation_risk": "reputation impact",
+                        "regulatory_implications": ["compliance", "issues"],
+                        "customer_impact": "customer impact",
+                        "recovery_cost": "recovery costs"
+                    }}""",
+                    generation_config=genai.GenerationConfig(temperature=0.3)
                 )
                 return self._parse_gemini_response(response.text)
             
@@ -412,11 +416,19 @@ class GeminiLLMService:
                 return response.dict() if hasattr(response, 'dict') else response.model_dump()
             else:
                 response = self.client.generate_content(
-                    f"""You are a patch management expert. {enhanced_prompt}""",
-                    generation_config=genai.GenerationConfig(
-                        temperature=0.3,
-                        response_schema=PatchRecommendation.model_json_schema()
-                    )
+                    f"""You are a patch management expert. {enhanced_prompt}
+                    
+                    Respond with a JSON object with these fields:
+                    {{
+                        "urgency": "Critical|High|Medium|Low",
+                        "timeline": "recommended timeline",
+                        "patch_version": "specific patch version",
+                        "risk_if_not_patched": "risk description",
+                        "deployment_strategy": "deployment approach",
+                        "testing_requirements": ["testing", "steps"],
+                        "rollback_plan": "rollback strategy"
+                    }}""",
+                    generation_config=genai.GenerationConfig(temperature=0.3)
                 )
                 return self._parse_gemini_response(response.text)
             

@@ -173,39 +173,68 @@ class ScanService:
     async def _enhance_vulnerability_with_cve(self, vulnerability: Vulnerability, service: dict):
         """Enhance vulnerability with CVE information"""
         try:
+            service_name = service["service_name"]
+            version = service["version"]
+            product = service["product"]
+            
+            logger.info(f"Looking up CVE for {service_name} {version} {product}")
+            
             cve_info = await self.cve_service.lookup_cve(
-                service["service_name"],
-                service["version"],
-                service["product"]
+                service_name,
+                version,
+                product
             )
             
-            if cve_info:
+            if cve_info and not cve_info.get("no_cve_found"):
+                logger.info(f"Found CVE data for {service_name}: {cve_info.get('cve_id')}")
                 vulnerability.cve_id = cve_info.get("cve_id")
                 vulnerability.cvss_score = cve_info.get("cvss_score")
                 if cve_info.get("severity"):
                     vulnerability.severity = cve_info["severity"]
+            else:
+                logger.info(f"No CVE found for {service_name} {version}")
+                # Ensure fields are explicitly set to indicate no CVE found
+                vulnerability.cve_id = None
+                vulnerability.cvss_score = None
                 
         except Exception as e:
-            logger.warning(f"CVE lookup failed: {e}")
+            logger.error(f"CVE lookup failed for {service.get('service_name', 'unknown')}: {e}")
+            # Ensure fields are explicitly set to None on error
+            vulnerability.cve_id = None
+            vulnerability.cvss_score = None
     
     async def _enhance_vulnerability_with_llm(self, vulnerability: Vulnerability, service: dict):
         """Enhance vulnerability with LLM analysis"""
         try:
+            service_name = service["service_name"]
+            version = service["version"]
+            
+            logger.info(f"Getting LLM analysis for {service_name} {version}")
+            
             analysis = await self.llm_service.analyze_vulnerability(
-                service_name=service["service_name"],
-                version=service["version"],
+                service_name=service_name,
+                version=version,
                 port=service["port"],
                 vulnerability_description=vulnerability.description,
                 cve_id=vulnerability.cve_id
             )
             
             if analysis:
-                vulnerability.recommendation = analysis.get("recommendation", "")
+                logger.info(f"LLM analysis successful for {service_name}")
+                if analysis.get("recommendation"):
+                    vulnerability.recommendation = analysis["recommendation"]
+                if analysis.get("remediation_commands"):
+                    vulnerability.remediation_commands = analysis["remediation_commands"]
                 if analysis.get("severity") and not vulnerability.cvss_score:
                     vulnerability.severity = analysis["severity"]
+            else:
+                logger.warning(f"No LLM analysis returned for {service_name}")
                 
         except Exception as e:
-            logger.warning(f"LLM analysis failed: {e}")
+            logger.error(f"LLM analysis failed for {service.get('service_name', 'unknown')}: {e}")
+            # Provide basic fallback recommendation
+            if not vulnerability.recommendation:
+                vulnerability.recommendation = f"Update {service.get('service_name', 'service')} to the latest version and review security configuration"
     
     def get_scan(self, scan_id: int) -> Optional[Scan]:
         """Get scan by ID"""
