@@ -7,7 +7,7 @@ from typing import List, Optional
 
 from app.core.database import get_db
 from app.services.vulnerability_service import VulnerabilityService
-from app.schemas.vulnerability import VulnerabilityResponse, VulnerabilityUpdate, FeedbackCreate
+from app.schemas.vulnerability import VulnerabilityResponse, VulnerabilityUpdate, FeedbackCreate, ScanInfo
 from app.utils.auth import get_current_user
 from app.models.user import User
 
@@ -37,6 +37,21 @@ async def get_vulnerabilities(
     )
     
     return vulnerabilities
+
+@router.get("/scans", response_model=List[dict])
+async def get_vulnerabilities_by_scan(
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get vulnerabilities grouped by scans"""
+    vuln_service = VulnerabilityService(db)
+    scan_groups = vuln_service.get_vulnerabilities_grouped_by_scan(user_id=current_user.id)
+    
+    # Serialize vulnerabilities
+    for group in scan_groups:
+        group['vulnerabilities'] = [VulnerabilityResponse.model_validate(vuln) for vuln in group['vulnerabilities']]
+    
+    return scan_groups
 
 
 @router.get("/{vuln_id}", response_model=VulnerabilityResponse)

@@ -130,6 +130,11 @@ export const vulnerabilityAPI = {
     const response = await api.post(`/vulnerabilities/${vulnId}/refresh-cve`);
     return response.data;
   },
+
+  getVulnerabilitiesByScans: async (): Promise<any[]> => {
+    const response = await api.get('/vulnerabilities/scans');
+    return response.data;
+  },
 };
 
 // Dashboard API

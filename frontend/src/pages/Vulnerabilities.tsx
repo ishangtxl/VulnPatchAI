@@ -28,6 +28,10 @@ import {
   CircularProgress,
   Alert,
   Link,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Badge,
 } from '@mui/material';
 import {
   Visibility,
@@ -36,6 +40,7 @@ import {
   OpenInNew,
   Delete,
   Refresh,
+  ExpandMore,
 } from '@mui/icons-material';
 import { vulnerabilityAPI } from '../services/api';
 import { Vulnerability } from '../types';
@@ -89,7 +94,7 @@ const formatTextWithBold = (text: string, lineIndex: number) => {
 };
 
 const Vulnerabilities: React.FC = () => {
-  const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
+  const [scanGroups, setScanGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedVuln, setSelectedVuln] = useState<Vulnerability | null>(null);
@@ -107,11 +112,8 @@ const Vulnerabilities: React.FC = () => {
   const fetchVulnerabilities = async () => {
     try {
       setLoading(true);
-      const data = await vulnerabilityAPI.getVulnerabilities({
-        severity: severityFilter || undefined,
-        status: statusFilter || undefined,
-      });
-      setVulnerabilities(data);
+      const data = await vulnerabilityAPI.getVulnerabilitiesByScans();
+      setScanGroups(data);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load vulnerabilities');
     } finally {
@@ -126,8 +128,13 @@ const Vulnerabilities: React.FC = () => {
   const handleStatusUpdate = async (vulnId: number, newStatus: string) => {
     try {
       await vulnerabilityAPI.updateStatus(vulnId, newStatus);
-      setVulnerabilities(vulns =>
-        vulns.map(v => v.id === vulnId ? { ...v, status: newStatus as any } : v)
+      setScanGroups(groups =>
+        groups.map(group => ({
+          ...group,
+          vulnerabilities: group.vulnerabilities.map((v: Vulnerability) =>
+            v.id === vulnId ? { ...v, status: newStatus as any } : v
+          )
+        }))
       );
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to update status');
@@ -157,7 +164,12 @@ const Vulnerabilities: React.FC = () => {
 
     try {
       await vulnerabilityAPI.deleteVulnerability(vulnToDelete.id);
-      setVulnerabilities(vulns => vulns.filter(v => v.id !== vulnToDelete.id));
+      setScanGroups(groups =>
+        groups.map(group => ({
+          ...group,
+          vulnerabilities: group.vulnerabilities.filter((v: Vulnerability) => v.id !== vulnToDelete.id)
+        })).filter(group => group.vulnerabilities.length > 0)
+      );
       setDeleteDialog(false);
       setVulnToDelete(null);
     } catch (err: any) {
@@ -168,8 +180,13 @@ const Vulnerabilities: React.FC = () => {
   const handleRefreshCVE = async (vulnId: number) => {
     try {
       const updatedVuln = await vulnerabilityAPI.refreshCVEData(vulnId);
-      setVulnerabilities(vulns =>
-        vulns.map(v => v.id === vulnId ? updatedVuln : v)
+      setScanGroups(groups =>
+        groups.map(group => ({
+          ...group,
+          vulnerabilities: group.vulnerabilities.map((v: Vulnerability) =>
+            v.id === vulnId ? updatedVuln : v
+          )
+        }))
       );
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to refresh CVE data');
@@ -206,11 +223,6 @@ const Vulnerabilities: React.FC = () => {
     }
   };
 
-  const filteredVulnerabilities = vulnerabilities.filter(vuln =>
-    searchFilter === '' ||
-    vuln.service_name.toLowerCase().includes(searchFilter.toLowerCase()) ||
-    vuln.description?.toLowerCase().includes(searchFilter.toLowerCase())
-  );
 
   if (loading) {
     return (
@@ -219,6 +231,24 @@ const Vulnerabilities: React.FC = () => {
       </Box>
     );
   }
+
+  const filteredScanGroups = scanGroups.map(group => ({
+    ...group,
+    vulnerabilities: group.vulnerabilities.filter((vuln: Vulnerability) => {
+      // Apply severity filter
+      const severityMatch = !severityFilter || vuln.severity === severityFilter;
+      
+      // Apply status filter
+      const statusMatch = !statusFilter || vuln.status === statusFilter;
+      
+      // Apply search filter
+      const searchMatch = !searchFilter ||
+        vuln.service_name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+        vuln.description?.toLowerCase().includes(searchFilter.toLowerCase());
+      
+      return severityMatch && statusMatch && searchMatch;
+    })
+  })).filter(group => group.vulnerabilities.length > 0);
 
   return (
     <Box>
@@ -282,120 +312,157 @@ const Vulnerabilities: React.FC = () => {
       </Card>
 
       {/* Vulnerabilities Table */}
-      <Card>
-        <CardContent>
-          <TableContainer component={Paper}>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell>Service</TableCell>
-                  <TableCell>Port</TableCell>
-                  <TableCell>Severity</TableCell>
-                  <TableCell>CVE ID</TableCell>
-                  <TableCell>CVSS Score</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell>Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {filteredVulnerabilities.map((vuln) => (
-                  <TableRow key={vuln.id}>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight="bold">
-                        {vuln.service_name}
-                      </Typography>
-                      {vuln.service_version && (
-                        <Typography variant="caption" color="textSecondary">
-                          v{vuln.service_version}
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>{vuln.port}</TableCell>
-                    <TableCell>
-                      <Chip
-                        label={vuln.severity || 'Unknown'}
-                        color={getSeverityColor(vuln.severity) as any}
-                        size="small"
-                      />
-                    </TableCell>
-                    <TableCell>
-                      {vuln.cve_id ? (
-                        <Link
-                          href={`https://nvd.nist.gov/vuln/detail/${vuln.cve_id}`}
-                          target="_blank"
-                          rel="noopener"
-                        >
-                          {vuln.cve_id}
-                          <OpenInNew sx={{ ml: 0.5, fontSize: 14 }} />
-                        </Link>
-                      ) : (
-                        'N/A'
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {vuln.cvss_score ? vuln.cvss_score.toFixed(1) : 'N/A'}
-                    </TableCell>
-                    <TableCell>
-                      <FormControl size="small" sx={{ minWidth: 120 }}>
-                        <Select
-                          value={vuln.status}
-                          onChange={(e) => handleStatusUpdate(vuln.id, e.target.value)}
-                        >
-                          <MenuItem value="open">Open</MenuItem>
-                          <MenuItem value="patched">Patched</MenuItem>
-                          <MenuItem value="ignored">Ignored</MenuItem>
-                          <MenuItem value="false_positive">False Positive</MenuItem>
-                        </Select>
-                      </FormControl>
-                    </TableCell>
-                    <TableCell>
-                      <IconButton
-                        onClick={() => setSelectedVuln(vuln)}
-                        color="primary"
-                      >
-                        <Visibility />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => {
-                          setSelectedVuln(vuln);
-                          setFeedbackDialog(true);
-                        }}
-                        color="secondary"
-                      >
-                        <Feedback />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => handleRefreshCVE(vuln.id)}
-                        color="info"
-                        title="Refresh CVE Data"
-                      >
-                        <Refresh />
-                      </IconButton>
-                      <IconButton
-                        onClick={() => {
-                          setVulnToDelete(vuln);
-                          setDeleteDialog(true);
-                        }}
-                        color="error"
-                      >
-                        <Delete />
-                      </IconButton>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </TableContainer>
-
-          {filteredVulnerabilities.length === 0 && (
+      {filteredScanGroups.length === 0 ? (
+        <Card>
+          <CardContent>
             <Box textAlign="center" py={4}>
               <Typography variant="h6" color="textSecondary">
                 No vulnerabilities found
               </Typography>
+              <Typography variant="body2" color="textSecondary" sx={{ mt: 1 }}>
+                Upload a scan file to view vulnerabilities
+              </Typography>
             </Box>
-          )}
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      ) : (
+        filteredScanGroups.map((scanGroup, groupIndex) => (
+          <Accordion key={scanGroup.scan.id} defaultExpanded={true}>
+            <AccordionSummary expandIcon={<ExpandMore />} id={`scan-panel-${groupIndex}`}>
+              <Typography variant="subtitle1" sx={{ flexBasis: '33.33%', flexShrink: 0 }}>
+                {scanGroup.scan.original_filename || scanGroup.scan.filename}
+              </Typography>
+              <Typography sx={{ color: 'text.secondary' }}>
+                Uploaded: {new Date(scanGroup.scan.upload_time).toLocaleString()}
+              </Typography>
+              <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                <Typography variant="body2" sx={{ mr: 1 }}>
+                  Vulnerabilities
+                </Typography>
+                <Chip
+                  label={scanGroup.vulnerabilities.length}
+                  color="primary"
+                  size="small"
+                />
+              </Box>
+            </AccordionSummary>
+            <AccordionDetails>
+
+            <TableContainer component={Paper}>
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell>Service</TableCell>
+                    <TableCell>Port</TableCell>
+                    <TableCell>Severity</TableCell>
+                    <TableCell>CVE ID</TableCell>
+                    <TableCell>CVSS Score</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Actions</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {scanGroup.vulnerabilities.map((vuln: Vulnerability) => (
+                    <TableRow key={vuln.id}>
+                      <TableCell>
+                        <Typography variant="body2" fontWeight="bold">
+                          {vuln.service_name}
+                        </Typography>
+                        {vuln.service_version && (
+                          <Typography variant="caption" color="textSecondary">
+                            v{vuln.service_version}
+                          </Typography>
+                        )}
+                      </TableCell>
+                      <TableCell>{vuln.port}</TableCell>
+                      <TableCell>
+                        <Chip
+                          label={vuln.severity || 'Unknown'}
+                          color={getSeverityColor(vuln.severity) as any}
+                          size="small"
+                        />
+                      </TableCell>
+                      <TableCell>
+                        {vuln.cve_id ? (
+                          <Link
+                            href={`https://nvd.nist.gov/vuln/detail/${vuln.cve_id}`}
+                            target="_blank"
+                            rel="noopener"
+                          >
+                            {vuln.cve_id}
+                            <OpenInNew sx={{ ml: 0.5, fontSize: 14 }} />
+                          </Link>
+                        ) : (
+                          'N/A'
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {vuln.cvss_score ? vuln.cvss_score.toFixed(1) : 'N/A'}
+                      </TableCell>
+                      <TableCell>
+                        <FormControl size="small" sx={{ minWidth: 120 }}>
+                          <Select
+                            value={vuln.status}
+                            onChange={(e) => handleStatusUpdate(vuln.id, e.target.value)}
+                          >
+                            <MenuItem value="open">Open</MenuItem>
+                            <MenuItem value="patched">Patched</MenuItem>
+                            <MenuItem value="ignored">Ignored</MenuItem>
+                            <MenuItem value="false_positive">False Positive</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </TableCell>
+                      <TableCell>
+                        <IconButton
+                          onClick={() => setSelectedVuln(vuln)}
+                          color="primary"
+                        >
+                          <Visibility />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => {
+                            setSelectedVuln(vuln);
+                            setFeedbackDialog(true);
+                          }}
+                          color="secondary"
+                        >
+                          <Feedback />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => handleRefreshCVE(vuln.id)}
+                          color="info"
+                          title="Refresh CVE Data"
+                        >
+                          <Refresh />
+                        </IconButton>
+                        <IconButton
+                          onClick={() => {
+                            setVulnToDelete(vuln);
+                            setDeleteDialog(true);
+                          }}
+                          color="error"
+                        >
+                          <Delete />
+                        </IconButton>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+            {scanGroup.vulnerabilities.length === 0 && (
+              <Box textAlign="center" py={4}>
+                <Typography variant="h6" color="textSecondary">
+                  No vulnerabilities found
+                </Typography>
+              </Box>
+            )}
+
+          </AccordionDetails>
+        </Accordion>
+        ))
+      )}
 
       {/* Vulnerability Details Dialog */}
       <Dialog
