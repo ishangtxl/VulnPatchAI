@@ -17,18 +17,7 @@ logger = logging.getLogger(__name__)
 class CVEService:
     def __init__(self):
         self.nvd_base_url = "https://services.nvd.nist.gov/rest/json/cves/2.0"
-        self.session = None
         self.cache = cve_cache
-    
-    async def _get_session(self):
-        """Get or create aiohttp session"""
-        if self.session is None:
-            headers = {}
-            if settings.NVD_API_KEY:
-                headers["apiKey"] = settings.NVD_API_KEY
-            
-            self.session = aiohttp.ClientSession(headers=headers)
-        return self.session
     
     async def lookup_cve(self, service_name: str, version: str, product: str = "") -> Optional[Dict]:
         """Lookup CVE information for a service with caching"""
@@ -36,10 +25,14 @@ class CVEService:
             # Check cache first
             cached_data = self.cache.get_cve_data(service_name, version, product)
             if cached_data:
-                logger.debug(f"Cache hit for CVE lookup: {service_name} {version}")
-                return cached_data
+                # Don't return cached "no_cve_found" results - allow retry
+                if not cached_data.get("no_cve_found"):
+                    logger.debug(f"Cache hit for CVE lookup: {service_name} {version}")
+                    return cached_data
+                else:
+                    logger.debug(f"Cached negative result found, retrying CVE lookup: {service_name} {version}")
             
-            logger.debug(f"Cache miss for CVE lookup: {service_name} {version}")
+            logger.info(f"Performing CVE lookup for: {service_name} {version} {product}")
             
             # Map common service names to their CVE-searchable equivalents
             service_mapping = {
@@ -73,19 +66,20 @@ class CVEService:
             # Try different search strategies
             cve_data = None
             for term in search_terms:
+                logger.debug(f"Searching CVEs with term: {term}")
                 cve_data = await self._search_cves(term, version)
                 if cve_data:
                     logger.info(f"Found CVE data for {service_name} using search term: {term}")
                     break
+                else:
+                    logger.debug(f"No CVE data found for term: {term}")
             
-            # Cache the result (even if None to avoid repeated API calls)
+            # Cache the result only if we found something
             if cve_data:
                 self.cache.set_cve_data(service_name, version, product, cve_data)
-                logger.debug(f"Cached CVE data for: {service_name} {version}")
+                logger.info(f"Successfully cached CVE data for: {service_name} {version}")
             else:
-                # Cache empty result for a shorter time to avoid repeated failed lookups
-                empty_result = {"no_cve_found": True, "searched_at": asyncio.get_event_loop().time()}
-                self.cache.set_cve_data(service_name, version, product, empty_result)
+                logger.warning(f"No CVE data found for {service_name} {version} after trying all search terms")
             
             return cve_data
             
@@ -95,37 +89,60 @@ class CVEService:
     
     async def _search_cves(self, keyword: str, version: str = "") -> Optional[Dict]:
         """Search CVEs by keyword"""
+        session = None
         try:
-            session = await self._get_session()
+            session = aiohttp.ClientSession()
             
-            # Build search URL
+            # Build search URL with improved search terms
+            search_query = keyword
+            if version:
+                search_query += f" {version}"
+            
             params = {
-                "keywordSearch": keyword,
-                "resultsPerPage": 5  # Limit results
+                "keywordSearch": search_query,
+                "resultsPerPage": 10  # Increase results for better matching
             }
             
-            if version:
-                params["keywordSearch"] += f" {version}"
+            logger.debug(f"NVD API request: {self.nvd_base_url} with params: {params}")
             
-            async with session.get(self.nvd_base_url, params=params) as response:
+            async with session.get(self.nvd_base_url, params=params, timeout=aiohttp.ClientTimeout(total=30)) as response:
+                logger.debug(f"NVD API response status: {response.status}")
+                
                 if response.status == 200:
                     data = await response.json()
+                    logger.debug(f"NVD API response data keys: {list(data.keys())}")
                     
                     vulnerabilities = data.get("vulnerabilities", [])
+                    logger.debug(f"Found {len(vulnerabilities)} vulnerabilities")
+                    
                     if vulnerabilities:
                         # Return the most relevant (first) CVE
                         cve_item = vulnerabilities[0]
-                        return self._parse_cve_data(cve_item)
+                        parsed_data = self._parse_cve_data(cve_item)
+                        logger.debug(f"Parsed CVE data: {parsed_data}")
+                        return parsed_data
                 
                 elif response.status == 429:  # Rate limited
-                    logger.warning("NVD API rate limit exceeded")
-                    await asyncio.sleep(1)
+                    logger.warning("NVD API rate limit exceeded, waiting...")
+                    await asyncio.sleep(2)
+                elif response.status == 403:
+                    logger.error("NVD API access forbidden - check API key")
+                else:
+                    logger.warning(f"NVD API returned status: {response.status}")
+                    response_text = await response.text()
+                    logger.debug(f"Response content: {response_text[:500]}")
                 
                 return None
                 
-        except Exception as e:
-            logger.error(f"CVE search failed: {e}")
+        except asyncio.TimeoutError:
+            logger.error(f"Timeout during CVE search for: {keyword}")
             return None
+        except Exception as e:
+            logger.error(f"CVE search failed for {keyword}: {e}")
+            return None
+        finally:
+            if session:
+                await session.close()
     
     def _parse_cve_data(self, cve_item: Dict) -> Dict:
         """Parse CVE data from NVD response"""
@@ -182,6 +199,7 @@ class CVEService:
     
     async def get_cve_details(self, cve_id: str) -> Optional[Dict]:
         """Get detailed information for a specific CVE with caching"""
+        session = None
         try:
             # Check cache first
             cached_details = self.cache.get_cve_details(cve_id)
@@ -191,12 +209,12 @@ class CVEService:
             
             logger.debug(f"Cache miss for CVE details: {cve_id}")
             
-            session = await self._get_session()
+            session = aiohttp.ClientSession()
             
             url = f"{self.nvd_base_url}"
             params = {"cveId": cve_id}
             
-            async with session.get(url, params=params) as response:
+            async with session.get(url, params=params, timeout=aiohttp.ClientTimeout(total=30)) as response:
                 if response.status == 200:
                     data = await response.json()
                     vulnerabilities = data.get("vulnerabilities", [])
@@ -216,9 +234,6 @@ class CVEService:
         except Exception as e:
             logger.error(f"Failed to get CVE details for {cve_id}: {e}")
             return None
-    
-    async def close(self):
-        """Close the aiohttp session"""
-        if self.session:
-            await self.session.close()
-            self.session = None
+        finally:
+            if session:
+                await session.close()

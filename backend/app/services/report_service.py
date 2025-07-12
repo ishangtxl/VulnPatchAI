@@ -284,3 +284,32 @@ Please review the detailed technical report and coordinate with your IT team to 
             .limit(limit)
             .all()
         )
+    
+    def delete_report(self, report_id: int) -> bool:
+        """Delete a report and its associated file"""
+        try:
+            # Get the report
+            report = self.db.query(Report).filter(Report.id == report_id).first()
+            if not report:
+                return False
+            
+            # Delete the file if it exists
+            if report.file_path and os.path.exists(report.file_path):
+                try:
+                    os.remove(report.file_path)
+                    print(f"Deleted report file: {report.file_path}")
+                except OSError as e:
+                    print(f"Warning: Could not delete report file {report.file_path}: {e}")
+                    # Continue with database deletion even if file deletion fails
+            
+            # Delete the database record
+            self.db.delete(report)
+            self.db.commit()
+            
+            print(f"Successfully deleted report {report_id}")
+            return True
+            
+        except Exception as e:
+            print(f"Error deleting report {report_id}: {e}")
+            self.db.rollback()
+            return False

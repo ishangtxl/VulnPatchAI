@@ -33,6 +33,7 @@ import {
   Download,
   Visibility,
   Assessment,
+  Delete,
 } from '@mui/icons-material';
 import { reportAPI, scanAPI } from '../services/api';
 import { Report, Scan } from '../types';
@@ -46,6 +47,9 @@ const Reports: React.FC = () => {
   const [generateDialog, setGenerateDialog] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [selectedReport, setSelectedReport] = useState<Report | null>(null);
+  const [deleteDialog, setDeleteDialog] = useState(false);
+  const [reportToDelete, setReportToDelete] = useState<Report | null>(null);
+  const [deleting, setDeleting] = useState(false);
   
   // Form state
   const [selectedScanId, setSelectedScanId] = useState<number | ''>('');
@@ -117,6 +121,28 @@ const Reports: React.FC = () => {
       setSelectedReport(report);
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Failed to load report');
+    }
+  };
+
+  const handleDeleteClick = (report: Report) => {
+    setReportToDelete(report);
+    setDeleteDialog(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!reportToDelete) return;
+
+    try {
+      setDeleting(true);
+      await reportAPI.deleteReport(reportToDelete.id);
+      setReports(prev => prev.filter(r => r.id !== reportToDelete.id));
+      setDeleteDialog(false);
+      setReportToDelete(null);
+      setSuccess(`Report "${reportToDelete.title}" deleted successfully!`);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to delete report');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -226,6 +252,15 @@ const Reports: React.FC = () => {
                           size="small"
                         >
                           <Download />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Delete Report">
+                        <IconButton
+                          onClick={() => handleDeleteClick(report)}
+                          color="error"
+                          size="small"
+                        >
+                          <Delete />
                         </IconButton>
                       </Tooltip>
                     </TableCell>
@@ -477,6 +512,43 @@ const Reports: React.FC = () => {
             startIcon={<Download />}
           >
             Download {selectedReport?.format?.toUpperCase()}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Delete Report Confirmation Dialog */}
+      <Dialog
+        open={deleteDialog}
+        onClose={() => setDeleteDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>
+          <Box display="flex" alignItems="center" gap={2}>
+            <Delete color="error" />
+            Confirm Delete
+          </Box>
+        </DialogTitle>
+        <DialogContent>
+          <Typography variant="body1" gutterBottom>
+            Are you sure you want to delete the report <strong>"{reportToDelete?.title}"</strong>?
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            This action cannot be undone. The report file will be permanently deleted from the system.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog(false)}>
+            Cancel
+          </Button>
+          <Button 
+            onClick={handleDeleteConfirm} 
+            color="error" 
+            variant="contained"
+            disabled={deleting}
+            startIcon={deleting ? <CircularProgress size={20} /> : <Delete />}
+          >
+            {deleting ? 'Deleting...' : 'Delete Report'}
           </Button>
         </DialogActions>
       </Dialog>

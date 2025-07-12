@@ -125,3 +125,43 @@ async def download_report(
         filename=f"report_{report_id}.{report.format}",
         media_type=media_type
     )
+
+
+@router.delete("/{report_id}")
+async def delete_report(
+    report_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a report"""
+    report_service = ReportService(db)
+    report = report_service.get_report(report_id)
+    
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Report not found"
+        )
+    
+    # Check if user owns the report or is admin
+    if report.user_id != current_user.id and current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to delete this report"
+        )
+    
+    try:
+        success = report_service.delete_report(report_id)
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to delete report"
+            )
+        
+        return {"message": "Report deleted successfully"}
+        
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error deleting report: {str(e)}"
+        )

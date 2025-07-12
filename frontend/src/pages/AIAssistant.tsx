@@ -57,12 +57,59 @@ interface Conversation {
 
 // Custom formatter for AI responses
 const formatAIResponse = (content: string) => {
+  // Helper function to format text with bold patterns
+  const formatText = (text: string, lineIndex: number) => {
+    const parts = [];
+    let lastIndex = 0;
+    let keyIndex = 0;
+    
+    // Find all bold patterns **text**
+    const boldRegex = /\*\*(.*?)\*\*/g;
+    let match;
+    
+    // Reset regex state
+    boldRegex.lastIndex = 0;
+    
+    while ((match = boldRegex.exec(text)) !== null) {
+      // Add any text before this match
+      if (match.index > lastIndex) {
+        const beforeText = text.substring(lastIndex, match.index);
+        if (beforeText) {
+          parts.push(
+            <span key={`text-${lineIndex}-${keyIndex++}`}>{beforeText}</span>
+          );
+        }
+      }
+      
+      // Add the bold text
+      parts.push(
+        <strong key={`bold-${lineIndex}-${keyIndex++}`} style={{ color: '#1976d2', fontWeight: 'bold' }}>
+          {match[1]}
+        </strong>
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Add any remaining text after the last match
+    if (lastIndex < text.length) {
+      const remainingText = text.substring(lastIndex);
+      if (remainingText) {
+        parts.push(
+          <span key={`text-${lineIndex}-${keyIndex++}`}>{remainingText}</span>
+        );
+      }
+    }
+    
+    return parts.length > 0 ? parts : [text];
+  };
+
   // Split content by lines and format each line
   return content.split('\n').map((line, index) => {
     const trimmedLine = line.trim();
     if (!trimmedLine) return <br key={index} />;
     
-    // Handle headers (### or ##)
+    // Handle headers (### or ## or patterns like **Header:**)
     if (trimmedLine.startsWith('###')) {
       return (
         <Typography key={index} variant="h6" sx={{ mt: 2, mb: 1, fontWeight: 'bold', color: 'primary.main' }}>
@@ -79,13 +126,24 @@ const formatAIResponse = (content: string) => {
       );
     }
     
+    // Handle bold headers like **Header:** or **Section Name**
+    if (/^\*\*([^\*]+)\*\*\s*:?\s*$/.test(trimmedLine)) {
+      const headerText = trimmedLine.replace(/^\*\*([^\*]+)\*\*\s*:?\s*$/, '$1');
+      return (
+        <Typography key={index} variant="h6" sx={{ mt: 2, mb: 1, fontWeight: 'bold', color: 'primary.main' }}>
+          {headerText}
+        </Typography>
+      );
+    }
+    
     // Handle bullet points
     if (trimmedLine.match(/^[\*\-]\s/)) {
       const content = trimmedLine.replace(/^[\*\-]\s/, '');
+      const formattedContent = formatText(content, index);
       return (
         <Typography key={index} variant="body2" sx={{ mb: 0.5, display: 'flex', alignItems: 'flex-start' }}>
           <span style={{ marginRight: '8px', color: '#1976d2', fontWeight: 'bold' }}>•</span>
-          <span>{content}</span>
+          <span>{formattedContent}</span>
         </Typography>
       );
     }
@@ -99,16 +157,11 @@ const formatAIResponse = (content: string) => {
       );
     }
     
-    // Handle bold text **text**
-    if (trimmedLine.includes('**')) {
-      const parts = trimmedLine.split('**');
+    // Check if line has any formatting (bold text)
+    if (/\*\*.*?\*\*/.test(trimmedLine)) {
       return (
         <Typography key={index} variant="body1" sx={{ mb: 1 }}>
-          {parts.map((part, i) => 
-            i % 2 === 1 ? 
-              <strong key={i} style={{ color: '#1976d2' }}>{part}</strong> : 
-              <span key={i}>{part}</span>
-          )}
+          {formatText(trimmedLine, index)}
         </Typography>
       );
     }

@@ -168,6 +168,10 @@ export const reportAPI = {
     });
     return response.data;
   },
+
+  deleteReport: async (reportId: number): Promise<void> => {
+    await api.delete(`/reports/${reportId}`);
+  },
 };
 
 // AI API

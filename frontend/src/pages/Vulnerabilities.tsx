@@ -41,6 +41,53 @@ import { vulnerabilityAPI } from '../services/api';
 import { Vulnerability } from '../types';
 import CommandBlock from '../components/CommandBlock';
 
+// Function to format text with bold patterns
+const formatTextWithBold = (text: string, lineIndex: number) => {
+  if (!text.includes('**')) {
+    return text;
+  }
+
+  const parts = [];
+  let lastIndex = 0;
+  let keyIndex = 0;
+  
+  const boldRegex = /\*\*(.*?)\*\*/g;
+  let match;
+  
+  while ((match = boldRegex.exec(text)) !== null) {
+    // Add text before the match
+    if (match.index > lastIndex) {
+      const beforeText = text.substring(lastIndex, match.index);
+      if (beforeText) {
+        parts.push(
+          <span key={`text-${lineIndex}-${keyIndex++}`}>{beforeText}</span>
+        );
+      }
+    }
+    
+    // Add bold text
+    parts.push(
+      <strong key={`bold-${lineIndex}-${keyIndex++}`} style={{ color: '#1976d2', fontWeight: 'bold' }}>
+        {match[1]}
+      </strong>
+    );
+    
+    lastIndex = match.index + match[0].length;
+  }
+  
+  // Add remaining text
+  if (lastIndex < text.length) {
+    const remainingText = text.substring(lastIndex);
+    if (remainingText) {
+      parts.push(
+        <span key={`text-${lineIndex}-${keyIndex++}`}>{remainingText}</span>
+      );
+    }
+  }
+  
+  return parts.length > 0 ? parts : text;
+};
+
 const Vulnerabilities: React.FC = () => {
   const [vulnerabilities, setVulnerabilities] = useState<Vulnerability[]>([]);
   const [loading, setLoading] = useState(true);
@@ -433,7 +480,7 @@ const Vulnerabilities: React.FC = () => {
                     Description
                   </Typography>
                   <Typography variant="body2">
-                    {selectedVuln.description}
+                    {formatTextWithBold(selectedVuln.description, 0)}
                   </Typography>
                 </Box>
               )}
@@ -461,38 +508,19 @@ const Vulnerabilities: React.FC = () => {
                       // Check if it's a main point (starts with * or -)
                       if (cleanLine.match(/^[\*\-]\s/)) {
                         const content = cleanLine.replace(/^[\*\-]\s/, '');
-                        // Check if it contains bold formatting **text**
-                        if (content.includes('**')) {
-                          const parts = content.split('**');
-                          return (
-                            <Box key={index} sx={{ mb: 1 }}>
-                              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start' }}>
-                                <span style={{ marginRight: '8px', color: '#1976d2', fontWeight: 'bold' }}>•</span>
-                                <span>
-                                  {parts.map((part, i) => (
-                                    i % 2 === 1 ? 
-                                      <strong key={i} style={{ color: '#1976d2' }}>{part}</strong> : 
-                                      <span key={i}>{part}</span>
-                                  ))}
-                                </span>
-                              </Typography>
-                            </Box>
-                          );
-                        } else {
-                          return (
-                            <Typography key={index} variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'flex-start' }}>
-                              <span style={{ marginRight: '8px', color: '#1976d2' }}>•</span>
-                              <span>{content}</span>
-                            </Typography>
-                          );
-                        }
+                        return (
+                          <Typography key={index} variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'flex-start' }}>
+                            <span style={{ marginRight: '8px', color: '#1976d2', fontWeight: 'bold' }}>•</span>
+                            <span>{formatTextWithBold(content, index)}</span>
+                          </Typography>
+                        );
                       }
                       
                       // Check if it's a numbered list item
                       if (cleanLine.match(/^\d+\./)) {
                         return (
                           <Typography key={index} variant="body2" sx={{ mb: 1, ml: 1 }}>
-                            {cleanLine}
+                            {formatTextWithBold(cleanLine, index)}
                           </Typography>
                         );
                       }
@@ -500,7 +528,7 @@ const Vulnerabilities: React.FC = () => {
                       // Regular text
                       return (
                         <Typography key={index} variant="body2" sx={{ mb: 1 }}>
-                          {cleanLine}
+                          {formatTextWithBold(cleanLine, index)}
                         </Typography>
                       );
                     })}
