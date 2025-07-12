@@ -444,40 +444,65 @@ const Vulnerabilities: React.FC = () => {
                     Recommendations
                   </Typography>
                   <Box sx={{ pl: 1 }}>
-                    {selectedVuln.recommendation.split(/\d+\.\s|\*\s|\n\s*\*/).filter(item => item.trim()).map((item, index) => {
-                      const cleanItem = item.trim();
-                      if (!cleanItem) return null;
+                    {selectedVuln.recommendation.split(/\n/).filter(line => line.trim()).map((line, index) => {
+                      const cleanLine = line.trim();
+                      if (!cleanLine) return null;
                       
-                      // Check if it's a main recommendation (contains **)
-                      const isMainPoint = cleanItem.includes('**');
-                      
-                      if (isMainPoint) {
-                        // Extract the main point title and description
-                        const parts = cleanItem.split('**');
-                        const title = parts[1] || '';
-                        const description = parts.slice(2).join('').replace(/^\s*:?\s*/, '');
-                        
+                      // Check if it's a heading (starts with ## or **)
+                      if (cleanLine.startsWith('##') || cleanLine.match(/^\*\*.*\*\*$/)) {
+                        const title = cleanLine.replace(/[#*]/g, '').trim();
                         return (
-                          <Box key={index} sx={{ mb: 1.5 }}>
-                            <Typography variant="body2" fontWeight="bold" color="primary">
-                              • {title}
-                            </Typography>
-                            {description && (
-                              <Typography variant="body2" sx={{ ml: 2, color: 'text.secondary' }}>
-                                {description}
-                              </Typography>
-                            )}
-                          </Box>
-                        );
-                      } else {
-                        // Regular bullet point
-                        return (
-                          <Typography key={index} variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'flex-start' }}>
-                            <span style={{ marginRight: '8px', color: '#1976d2' }}>•</span>
-                            <span>{cleanItem}</span>
+                          <Typography key={index} variant="subtitle2" fontWeight="bold" color="primary" sx={{ mt: 2, mb: 1 }}>
+                            {title}
                           </Typography>
                         );
                       }
+                      
+                      // Check if it's a main point (starts with * or -)
+                      if (cleanLine.match(/^[\*\-]\s/)) {
+                        const content = cleanLine.replace(/^[\*\-]\s/, '');
+                        // Check if it contains bold formatting **text**
+                        if (content.includes('**')) {
+                          const parts = content.split('**');
+                          return (
+                            <Box key={index} sx={{ mb: 1 }}>
+                              <Typography variant="body2" sx={{ display: 'flex', alignItems: 'flex-start' }}>
+                                <span style={{ marginRight: '8px', color: '#1976d2', fontWeight: 'bold' }}>•</span>
+                                <span>
+                                  {parts.map((part, i) => (
+                                    i % 2 === 1 ? 
+                                      <strong key={i} style={{ color: '#1976d2' }}>{part}</strong> : 
+                                      <span key={i}>{part}</span>
+                                  ))}
+                                </span>
+                              </Typography>
+                            </Box>
+                          );
+                        } else {
+                          return (
+                            <Typography key={index} variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'flex-start' }}>
+                              <span style={{ marginRight: '8px', color: '#1976d2' }}>•</span>
+                              <span>{content}</span>
+                            </Typography>
+                          );
+                        }
+                      }
+                      
+                      // Check if it's a numbered list item
+                      if (cleanLine.match(/^\d+\./)) {
+                        return (
+                          <Typography key={index} variant="body2" sx={{ mb: 1, ml: 1 }}>
+                            {cleanLine}
+                          </Typography>
+                        );
+                      }
+                      
+                      // Regular text
+                      return (
+                        <Typography key={index} variant="body2" sx={{ mb: 1 }}>
+                          {cleanLine}
+                        </Typography>
+                      );
                     })}
                   </Box>
                 </Box>

@@ -46,13 +46,81 @@ interface Message {
 }
 
 interface Conversation {
-  id: string;
-  title: string;
-  created_at: string;
-  updated_at: string;
+  conversation_id: string;
+  title?: string;
+  context_type: string;
   message_count: number;
-  is_archived: boolean;
+  is_active: boolean;
+  created_at: string;
+  last_activity_at: string;
 }
+
+// Custom formatter for AI responses
+const formatAIResponse = (content: string) => {
+  // Split content by lines and format each line
+  return content.split('\n').map((line, index) => {
+    const trimmedLine = line.trim();
+    if (!trimmedLine) return <br key={index} />;
+    
+    // Handle headers (### or ##)
+    if (trimmedLine.startsWith('###')) {
+      return (
+        <Typography key={index} variant="h6" sx={{ mt: 2, mb: 1, fontWeight: 'bold', color: 'primary.main' }}>
+          {trimmedLine.replace(/^#+\s*/, '')}
+        </Typography>
+      );
+    }
+    
+    if (trimmedLine.startsWith('##')) {
+      return (
+        <Typography key={index} variant="h5" sx={{ mt: 2, mb: 1, fontWeight: 'bold', color: 'primary.main' }}>
+          {trimmedLine.replace(/^#+\s*/, '')}
+        </Typography>
+      );
+    }
+    
+    // Handle bullet points
+    if (trimmedLine.match(/^[\*\-]\s/)) {
+      const content = trimmedLine.replace(/^[\*\-]\s/, '');
+      return (
+        <Typography key={index} variant="body2" sx={{ mb: 0.5, display: 'flex', alignItems: 'flex-start' }}>
+          <span style={{ marginRight: '8px', color: '#1976d2', fontWeight: 'bold' }}>•</span>
+          <span>{content}</span>
+        </Typography>
+      );
+    }
+    
+    // Handle numbered lists
+    if (trimmedLine.match(/^\d+\./)) {
+      return (
+        <Typography key={index} variant="body2" sx={{ mb: 0.5, ml: 1 }}>
+          {trimmedLine}
+        </Typography>
+      );
+    }
+    
+    // Handle bold text **text**
+    if (trimmedLine.includes('**')) {
+      const parts = trimmedLine.split('**');
+      return (
+        <Typography key={index} variant="body1" sx={{ mb: 1 }}>
+          {parts.map((part, i) => 
+            i % 2 === 1 ? 
+              <strong key={i} style={{ color: '#1976d2' }}>{part}</strong> : 
+              <span key={i}>{part}</span>
+          )}
+        </Typography>
+      );
+    }
+    
+    // Regular text
+    return (
+      <Typography key={index} variant="body1" sx={{ mb: 1 }}>
+        {trimmedLine}
+      </Typography>
+    );
+  });
+};
 
 const AIAssistant: React.FC = () => {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -98,14 +166,17 @@ const AIAssistant: React.FC = () => {
     try {
       setLoadingConversations(true);
       const data = await conversationAPI.getConversations();
+      console.log('Loaded conversations:', data); // Debug log
       setConversations(data);
       
       // If there are conversations but none selected, select the most recent
       if (data.length > 0 && !currentConversationId) {
-        setCurrentConversationId(data[0].id);
+        console.log('Auto-selecting conversation:', data[0].conversation_id); // Debug log
+        setCurrentConversationId(data[0].conversation_id);
       }
     } catch (err: any) {
       console.error('Failed to load conversations:', err);
+      setError(`Failed to load conversations: ${err.response?.data?.detail || err.message}`);
     } finally {
       setLoadingConversations(false);
     }
@@ -113,7 +184,11 @@ const AIAssistant: React.FC = () => {
 
   const loadConversationMessages = async (conversationId: string) => {
     try {
+      setLoading(true);
+      setError(''); // Clear any previous errors
       const data = await conversationAPI.getConversationMessages(conversationId);
+      console.log('Loaded conversation messages:', data); // Debug log
+      
       const formattedMessages: Message[] = data.map((msg: any) => ({
         id: msg.id.toString(),
         type: msg.role === 'user' ? 'user' : 'ai',
@@ -121,10 +196,15 @@ const AIAssistant: React.FC = () => {
         timestamp: new Date(msg.created_at),
         conversation_id: conversationId,
       }));
+      
       setMessages(formattedMessages);
     } catch (err: any) {
       console.error('Failed to load conversation messages:', err);
-      setError('Failed to load conversation history');
+      setError(`Failed to load conversation history: ${err.response?.data?.detail || err.message}`);
+      // Set empty messages on error to avoid showing stale data
+      setMessages([]);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -139,7 +219,9 @@ const AIAssistant: React.FC = () => {
   };
 
   const handleConversationSelect = (conversationId: string) => {
+    console.log('Selecting conversation:', conversationId); // Debug log
     setCurrentConversationId(conversationId);
+    setError(''); // Clear any previous errors
   };
 
   const handleDeleteConversation = async (conversationId: string) => {
@@ -273,44 +355,44 @@ const AIAssistant: React.FC = () => {
               <List dense sx={{ maxHeight: 'calc(100vh - 350px)', overflowY: 'auto' }}>
                 {conversations.map((conversation) => (
                   <ListItem
-                    key={conversation.id}
+                    key={conversation.conversation_id}
                     disablePadding
                     secondaryAction={
                       <IconButton
                         edge="end"
                         size="small"
-                        onClick={(e) => handleMenuOpen(e, conversation.id)}
+                        onClick={(e) => handleMenuOpen(e, conversation.conversation_id)}
                       >
                         <MoreVert fontSize="small" />
                       </IconButton>
                     }
                   >
                     <ListItemButton
-                      selected={currentConversationId === conversation.id}
-                      onClick={() => handleConversationSelect(conversation.id)}
+                      selected={currentConversationId === conversation.conversation_id}
+                      onClick={() => handleConversationSelect(conversation.conversation_id)}
                       sx={{ pr: 6 }}
                     >
                       <ListItemText
                         primary={
-                          editingTitle === conversation.id ? (
+                          editingTitle === conversation.conversation_id ? (
                             <TextField
                               size="small"
                               value={newTitle}
                               onChange={(e) => setNewTitle(e.target.value)}
-                              onBlur={() => handleEditTitle(conversation.id, newTitle)}
+                              onBlur={() => handleEditTitle(conversation.conversation_id, newTitle)}
                               onKeyPress={(e) => {
                                 if (e.key === 'Enter') {
-                                  handleEditTitle(conversation.id, newTitle);
+                                  handleEditTitle(conversation.conversation_id, newTitle);
                                 }
                               }}
                               autoFocus
                               onClick={(e) => e.stopPropagation()}
                             />
                           ) : (
-                            conversation.title
+                            conversation.title || 'Untitled Conversation'
                           )
                         }
-                        secondary={`${conversation.message_count} messages • ${new Date(conversation.updated_at).toLocaleDateString()}`}
+                        secondary={`${conversation.message_count} messages • ${new Date(conversation.last_activity_at).toLocaleDateString()}`}
                         primaryTypographyProps={{
                           variant: 'body2',
                           sx: {
@@ -383,9 +465,13 @@ const AIAssistant: React.FC = () => {
                         {message.type === 'ai' ? 'AI Assistant' : 'You'}
                       </Typography>
                     </Box>
-                    <Typography variant="body1">
-                      {message.content}
-                    </Typography>
+<Box component="div">
+                      {message.type === 'ai' ? formatAIResponse(message.content) : (
+                        <Typography variant="body1">
+                          {message.content}
+                        </Typography>
+                      )}
+                    </Box>
                     <Typography variant="caption" sx={{ opacity: 0.7, mt: 1, display: 'block' }}>
                       {message.timestamp.toLocaleTimeString()}
                     </Typography>
@@ -515,10 +601,10 @@ const AIAssistant: React.FC = () => {
         <MenuItem
           onClick={() => {
             if (menuAnchor) {
-              const conversation = conversations.find(c => c.id === menuAnchor.conversationId);
+              const conversation = conversations.find(c => c.conversation_id === menuAnchor.conversationId);
               if (conversation) {
-                setEditingTitle(conversation.id);
-                setNewTitle(conversation.title);
+                setEditingTitle(conversation.conversation_id);
+                setNewTitle(conversation.title || '');
               }
             }
             handleMenuClose();
