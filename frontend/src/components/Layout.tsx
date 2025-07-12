@@ -26,7 +26,6 @@ import {
   SmartToy,
   AccountCircle,
   Logout,
-  Analytics,
   Search,
   AdminPanelSettings,
 } from '@mui/icons-material';
@@ -74,7 +73,6 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Vulnerabilities', icon: <Security />, path: '/vulnerabilities' },
     { text: 'Reports', icon: <Assessment />, path: '/reports' },
     { text: 'AI Assistant', icon: <SmartToy />, path: '/ai-assistant' },
-    { text: 'Analytics', icon: <Analytics />, path: '/analytics' },
     { text: 'Search', icon: <Search />, path: '/search' },
   ];
 

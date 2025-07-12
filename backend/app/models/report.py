@@ -13,7 +13,7 @@ class Report(Base):
     id = Column(Integer, primary_key=True, index=True)
     scan_id = Column(Integer, ForeignKey("scans.id"), nullable=False)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    report_type = Column(String, nullable=False)  # executive, technical
+    report_type = Column(String, nullable=False)  # detailed
     title = Column(String)
     content = Column(Text)
     format = Column(String, default="html")  # html, pdf, json

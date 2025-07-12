@@ -9,7 +9,6 @@ import Vulnerabilities from './pages/Vulnerabilities';
 import Reports from './pages/Reports';
 import AIAssistant from './pages/AIAssistant';
 import Search from './pages/Search';
-import Analytics from './pages/Analytics';
 import AdminDashboard from './pages/AdminDashboard';
 import Login from './pages/Login';
 import { AuthProvider, useAuth } from './hooks/useAuth';
@@ -58,7 +57,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/vulnerabilities" element={<Vulnerabilities />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/ai-assistant" element={<AIAssistant />} />
-        <Route path="/analytics" element={<Analytics />} />
         <Route path="/search" element={<Search />} />
         <Route path="/admin" element={<AdminDashboard />} />
         <Route path="*" element={<Navigate to="/dashboard" />} />

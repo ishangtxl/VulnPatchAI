@@ -89,13 +89,11 @@ class ReportService:
     def _generate_fallback_report(self, vulnerabilities: List[Vulnerability], report_type: str) -> str:
         """Generate fallback report when LLM is unavailable"""
         
-        if report_type == "executive":
-            return self._generate_executive_fallback(vulnerabilities)
-        else:
-            return self._generate_technical_fallback(vulnerabilities)
+        # Single detailed report type combining both executive and technical content
+        return self._generate_detailed_fallback(vulnerabilities)
     
-    def _generate_executive_fallback(self, vulnerabilities: List[Vulnerability]) -> str:
-        """Generate executive summary fallback"""
+    def _generate_detailed_fallback(self, vulnerabilities: List[Vulnerability]) -> str:
+        """Generate detailed report fallback combining executive and technical content"""
         
         total = len(vulnerabilities)
         critical = len([v for v in vulnerabilities if v.severity == "Critical"])
@@ -104,10 +102,10 @@ class ReportService:
         low = len([v for v in vulnerabilities if v.severity == "Low"])
         
         content = f"""
-# Executive Summary - Vulnerability Assessment Report
+# Detailed Vulnerability Assessment Report
 
-## Overview
-This report summarizes the security vulnerabilities identified in your network infrastructure scan.
+## Executive Summary
+This report provides a comprehensive analysis of security vulnerabilities identified in your network infrastructure scan.
 
 ## Key Findings
 - **Total Vulnerabilities**: {total}
@@ -132,19 +130,7 @@ This report summarizes the security vulnerabilities identified in your network i
 3. Establish a formal patch management process
 4. Consider implementing additional security controls
 
-## Next Steps
-Please review the detailed technical report and coordinate with your IT team to implement the recommended remediation actions.
-"""
-        
-        return content
-    
-    def _generate_technical_fallback(self, vulnerabilities: List[Vulnerability]) -> str:
-        """Generate technical report fallback"""
-        
-        content = """
-# Technical Vulnerability Report
-
-## Vulnerability Details
+## Detailed Vulnerability Analysis
 
 """
         
@@ -165,6 +151,12 @@ Please review the detailed technical report and coordinate with your IT team to 
         
         if len(vulnerabilities) > 20:
             content += f"\n*Note: Showing first 20 of {len(vulnerabilities)} vulnerabilities.*\n"
+            
+        content += """
+
+## Next Steps
+Please coordinate with your IT team to implement the recommended remediation actions, starting with critical and high-severity vulnerabilities.
+"""
         
         return content
     

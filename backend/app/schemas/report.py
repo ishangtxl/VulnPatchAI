@@ -8,7 +8,7 @@ from datetime import datetime
 
 class ReportBase(BaseModel):
     scan_id: int
-    report_type: str  # executive, technical
+    report_type: str  # detailed
     format: str = "html"  # html, pdf, json
 
 

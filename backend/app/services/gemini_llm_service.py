@@ -609,62 +609,34 @@ class GeminiLLMService:
     def _build_enhanced_report_prompt(self, vuln_summary: str, report_type: str) -> str:
         """Build enhanced prompts for different report types"""
         
-        if report_type == "executive":
-            return f"""
-Create an executive summary report for the following vulnerabilities:
+        # Single detailed report type combining executive and technical content
+        return f"""
+Create a comprehensive detailed vulnerability assessment report for the following vulnerabilities:
 
 {vuln_summary}
 
 Structure the report as follows:
 
 ## Executive Summary
-Brief overview of the security posture and key concerns
+Brief overview of the security posture, key concerns, and business impact
 
 ## Risk Assessment
 - Overall risk level and business impact
 - Financial implications of vulnerabilities
 - Regulatory compliance concerns
+- Most critical vulnerabilities requiring immediate attention
 
 ## Key Findings
-- Most critical vulnerabilities requiring immediate attention
 - Trends and patterns in the vulnerability landscape
 - Areas of greatest concern
-
-## Strategic Recommendations
-- Prioritized action items with business justification
-- Resource requirements and timeline
-- Risk mitigation strategies
-
-## Remediation Roadmap
-- Include specific terminal commands for critical fixes
-- Step-by-step implementation guidance
-- Verification procedures
-
-## Next Steps
-- Immediate actions (next 24-48 hours)
-- Short-term goals (next 30 days)
-- Long-term security improvements
-
-Write in clear business language suitable for executives and decision-makers.
-Focus on business impact, cost implications, and strategic recommendations.
-Include actionable technical steps where appropriate.
-"""
-        else:  # technical report
-            return f"""
-Create a detailed technical report for the following vulnerabilities:
-
-{vuln_summary}
-
-Structure the report as follows:
-
-## Technical Summary
-Overview of the vulnerability landscape and technical concerns
+- Strategic recommendations with business justification
 
 ## Detailed Vulnerability Analysis
 For each critical vulnerability:
 - Technical description and attack vectors
 - Affected systems and services
 - Exploitation difficulty and likelihood
+- CVSS scores and severity ratings
 
 ## Remediation Commands
 For each vulnerability, include:
@@ -684,13 +656,18 @@ For each vulnerability, include:
 - Preventive controls with implementation commands
 - Monitoring and detection improvements
 
+## Remediation Roadmap
+- Immediate actions (next 24-48 hours)
+- Short-term goals (next 30 days)
+- Long-term security improvements
+- Resource requirements and timeline
+
 ## Quick Reference
 - Summary table of all critical commands
 - Emergency procedures for immediate threats
-- Contact information for escalation
 
-Write in technical language suitable for IT professionals and system administrators.
-Include specific commands, configurations, and technical procedures.
+Write in language suitable for both executives and IT professionals.
+Combine business impact analysis with technical implementation details.
 Format commands in code blocks for easy copying.
 """
     

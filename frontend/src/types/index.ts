@@ -61,7 +61,7 @@ export interface Report {
   id: number;
   scan_id: number;
   user_id: number;
-  report_type: 'executive' | 'technical';
+  report_type: 'detailed';
   title: string;
   description?: string;
   content?: string;
@@ -110,7 +110,7 @@ export interface ScanUploadForm {
 
 export interface ReportGenerateForm {
   scan_id: number;
-  report_type: 'executive' | 'technical';
+  report_type: 'detailed';
   format: 'html' | 'pdf';
 }
 

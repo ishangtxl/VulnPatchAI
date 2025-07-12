@@ -53,7 +53,7 @@ const Reports: React.FC = () => {
   
   // Form state
   const [selectedScanId, setSelectedScanId] = useState<number | ''>('');
-  const [reportType, setReportType] = useState<'executive' | 'technical'>('executive');
+  const reportType = 'detailed';
   const [reportFormat, setReportFormat] = useState<'html' | 'pdf'>('html');
 
   const fetchReports = async () => {
@@ -147,7 +147,7 @@ const Reports: React.FC = () => {
   };
 
   const getReportTypeColor = (type: string) => {
-    return type === 'executive' ? 'primary' : 'secondary';
+    return 'primary';  // Single report type uses primary color
   };
 
   const getFormatIcon = (format: string) => {
@@ -299,7 +299,7 @@ const Reports: React.FC = () => {
         </DialogTitle>
         <DialogContent>
           <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-            Create a comprehensive vulnerability assessment report with AI-powered analysis and remediation recommendations.
+            Generate a detailed vulnerability assessment report that combines executive summary and technical analysis with AI-powered insights and remediation recommendations.
           </Typography>
           
           <Grid container spacing={3}>
@@ -325,35 +325,7 @@ const Reports: React.FC = () => {
               </FormControl>
             </Grid>
             
-            <Grid item xs={12} sm={6}>
-              <FormControl fullWidth>
-                <InputLabel>Report Type</InputLabel>
-                <Select
-                  value={reportType}
-                  label="Report Type"
-                  onChange={(e) => setReportType(e.target.value as 'executive' | 'technical')}
-                >
-                  <MenuItem value="executive">
-                    <Box>
-                      <Typography variant="body2">Executive Summary</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        High-level overview for decision makers
-                      </Typography>
-                    </Box>
-                  </MenuItem>
-                  <MenuItem value="technical">
-                    <Box>
-                      <Typography variant="body2">Technical Report</Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        Detailed analysis with remediation commands
-                      </Typography>
-                    </Box>
-                  </MenuItem>
-                </Select>
-              </FormControl>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <FormControl fullWidth>
                 <InputLabel>Format</InputLabel>
                 <Select
@@ -391,8 +363,9 @@ const Reports: React.FC = () => {
           {selectedScanId && (
             <Alert severity="info" sx={{ mt: 2 }}>
               <Typography variant="body2">
-                <strong>AI Enhancement:</strong> This report will include intelligent vulnerability analysis, 
-                business impact assessment, and OS-specific remediation commands powered by advanced LLM technology.
+                <strong>Detailed Report:</strong> This comprehensive report will include executive summary, 
+                technical vulnerability details, intelligent analysis, business impact assessment, and 
+                OS-specific remediation commands powered by advanced LLM technology.
               </Typography>
             </Alert>
           )}
