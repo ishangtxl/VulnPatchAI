@@ -581,20 +581,15 @@ cd frontend && npm install
 curl http://localhost:8000/health
 ```
 
-### **Performance Issues**
-- **Slow AI responses**: Check Gemini API key and rate limits
-- **Large file uploads**: Increase file size limits in Docker/nginx
-- **Database performance**: Monitor query performance and add indexes
 
 ## 👥 Team & Acknowledgments
 
 Developed as part of the Société Générale Hackathon focusing on innovative vulnerability management solutions using AI/LLM technologies.
 
-### **Special Thanks**
-- **Google Gemini Team** for providing advanced LLM capabilities
-- **FastAPI Community** for the excellent web framework
-- **React/Material-UI Teams** for modern frontend tools
-- **Nmap Project** for network scanning capabilities
+### **Development Team**
+- **Ishan Gupta** - [@ishangtl](https://github.com/ishangtxl)
+- **Joel Stephen Mathew** - [@playinpixel](https://github.com/playinpixel)
+- **Bhumi Lakhani** - [@bhumilakhani2022](https://github.com/bhumilakhani2022)
 
 ---
 
