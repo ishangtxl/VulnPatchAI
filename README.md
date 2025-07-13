@@ -587,7 +587,7 @@ curl http://localhost:8000/health
 Developed as part of the Société Générale Hackathon focusing on innovative vulnerability management solutions using AI/LLM technologies.
 
 ### **Development Team**
-- **Ishan Gupta** - [@ishangtl](https://github.com/ishangtxl)
+- **Ishan Gupta** - [@ishangtxl](https://github.com/ishangtxl)
 - **Joel Stephen Mathew** - [@playinpixel](https://github.com/playinpixel)
 - **Bhumi Lakhani** - [@bhumilakhani2022](https://github.com/bhumilakhani2022)
 
