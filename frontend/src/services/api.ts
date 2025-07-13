@@ -306,4 +306,90 @@ export const adminAPI = {
   }
 };
 
+// Search API
+export const searchAPI = {
+  // Advanced search for vulnerabilities
+  searchVulnerabilities: async (searchData: {
+    query?: string;
+    filters?: any;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<any> => {
+    const response = await api.post('/search/vulnerabilities', searchData);
+    return response.data;
+  },
+
+  // Advanced search for scans
+  searchScans: async (searchData: {
+    query?: string;
+    filters?: any;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<any> => {
+    const response = await api.post('/search/scans', searchData);
+    return response.data;
+  },
+
+  // Advanced search for audit logs
+  searchAuditLogs: async (searchData: {
+    query?: string;
+    filters?: any;
+    sort_by?: string;
+    sort_order?: string;
+    page?: number;
+    page_size?: number;
+  }): Promise<any> => {
+    const response = await api.post('/search/audit-logs', searchData);
+    return response.data;
+  },
+
+  // Global search across all entities
+  globalSearch: async (query: string, page: number = 1, pageSize: number = 20): Promise<any> => {
+    const response = await api.get(`/search/global?query=${encodeURIComponent(query)}&page=${page}&page_size=${pageSize}`);
+    return response.data;
+  },
+
+  // Get search suggestions
+  getSearchSuggestions: async (query: string, category?: string): Promise<any> => {
+    const params = new URLSearchParams({ query });
+    if (category) params.append('category', category);
+    const response = await api.get(`/search/suggestions?${params}`);
+    return response.data;
+  },
+
+  // Get filter options for a category
+  getFilterOptions: async (category: string): Promise<any> => {
+    const response = await api.get(`/search/filter-options/${category}`);
+    return response.data;
+  },
+
+  // Quick vulnerability search
+  quickVulnerabilitySearch: async (query: string): Promise<any> => {
+    const response = await api.get(`/search/vulnerabilities/quick?query=${encodeURIComponent(query)}`);
+    return response.data;
+  },
+
+  // Quick scan search
+  quickScanSearch: async (query: string): Promise<any> => {
+    const response = await api.get(`/search/scans/quick?query=${encodeURIComponent(query)}`);
+    return response.data;
+  },
+
+  // Get advanced filter options
+  getAdvancedFilters: async (): Promise<any> => {
+    const response = await api.get('/search/advanced-filters');
+    return response.data;
+  },
+
+  // Get search statistics
+  getSearchStats: async (): Promise<any> => {
+    const response = await api.get('/search/stats');
+    return response.data;
+  }
+};
+
 export default api;

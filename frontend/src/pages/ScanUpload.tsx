@@ -12,12 +12,20 @@ import {
   ListItemText,
   ListItemIcon,
   Chip,
+  IconButton,
+  Tooltip,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
 } from '@mui/material';
 import {
   CloudUpload,
   CheckCircle,
   Error,
   Schedule,
+  ContentCopy,
+  Info,
+  ExpandMore,
 } from '@mui/icons-material';
 import { useDropzone } from 'react-dropzone';
 import { scanAPI } from '../services/api';
@@ -27,6 +35,15 @@ const ScanUpload: React.FC = () => {
   const [uploading, setUploading] = useState(false);
   const [uploadedScans, setUploadedScans] = useState<Scan[]>([]);
   const [error, setError] = useState<string>('');
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      // Could add a toast notification here
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
 
   const onDrop = async (acceptedFiles: File[]) => {
     setError('');
@@ -202,6 +219,90 @@ const ScanUpload: React.FC = () => {
             </ul>
           </Typography>
         </Alert>
+      </Box>
+
+      {/* Nmap Information Box */}
+      <Box sx={{ mt: 3 }}>
+        <Accordion>
+          <AccordionSummary expandIcon={<ExpandMore />}>
+            <Box display="flex" alignItems="center" gap={1}>
+              <Info color="primary" />
+              <Typography variant="h6">What is Nmap & How to Generate XML Scans</Typography>
+            </Box>
+          </AccordionSummary>
+          <AccordionDetails>
+            <Box>
+              <Typography variant="body2" gutterBottom sx={{ mb: 2 }}>
+                <strong>Nmap</strong> is a powerful network scanning tool used to discover hosts, services, and security vulnerabilities on computer networks.
+              </Typography>
+              
+              <Typography variant="subtitle2" gutterBottom sx={{ mt: 2, mb: 1 }}>
+                Generate Nmap XML files with these commands:
+              </Typography>
+              
+              {/* Ubuntu/Linux Commands */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" fontWeight="bold" gutterBottom>
+                  Ubuntu/Linux:
+                </Typography>
+                <Box sx={{ 
+                  bgcolor: '#f5f5f5', 
+                  p: 2, 
+                  borderRadius: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  fontFamily: 'monospace'
+                }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                    sudo nmap -sV -sC -oX scan_results.xml &lt;target_ip&gt;
+                  </Typography>
+                  <Tooltip title="Copy command">
+                    <IconButton 
+                      size="small" 
+                      onClick={() => copyToClipboard('sudo nmap -sV -sC -oX scan_results.xml <target_ip>')}
+                    >
+                      <ContentCopy fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              {/* macOS Commands */}
+              <Box sx={{ mb: 2 }}>
+                <Typography variant="body2" fontWeight="bold" gutterBottom>
+                  macOS:
+                </Typography>
+                <Box sx={{ 
+                  bgcolor: '#f5f5f5', 
+                  p: 2, 
+                  borderRadius: 1, 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'space-between',
+                  fontFamily: 'monospace'
+                }}>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                    brew install nmap && nmap -sV -sC -oX scan_results.xml &lt;target_ip&gt;
+                  </Typography>
+                  <Tooltip title="Copy command">
+                    <IconButton 
+                      size="small" 
+                      onClick={() => copyToClipboard('brew install nmap && nmap -sV -sC -oX scan_results.xml <target_ip>')}
+                    >
+                      <ContentCopy fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+              </Box>
+
+              <Typography variant="caption" color="textSecondary">
+                Replace &lt;target_ip&gt; with the actual IP address or hostname you want to scan. 
+                The -sV flag detects service versions, -sC runs default scripts, and -oX outputs results in XML format.
+              </Typography>
+            </Box>
+          </AccordionDetails>
+        </Accordion>
       </Box>
     </Box>
   );

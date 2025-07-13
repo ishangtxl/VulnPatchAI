@@ -222,11 +222,7 @@ const AIAssistant: React.FC = () => {
       console.log('Loaded conversations:', data); // Debug log
       setConversations(data);
       
-      // If there are conversations but none selected, select the most recent
-      if (data.length > 0 && !currentConversationId) {
-        console.log('Auto-selecting conversation:', data[0].conversation_id); // Debug log
-        setCurrentConversationId(data[0].conversation_id);
-      }
+      // Don't auto-select any conversation - always start with a new chat
     } catch (err: any) {
       console.error('Failed to load conversations:', err);
       setError(`Failed to load conversations: ${err.response?.data?.detail || err.message}`);

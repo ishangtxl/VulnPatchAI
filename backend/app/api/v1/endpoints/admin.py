@@ -72,14 +72,24 @@ async def get_feedback_overview(
                 "analysis_type_ratings": {}
             }
         
+        # Get actual learning status from AI learning service
+        try:
+            learning_status = ai_learning_service.get_learning_status()
+            cached_improvements = learning_status.get("cached_improvements", 0)
+            learning_active = learning_status.get("status", "active")
+        except Exception as e:
+            logger.warning(f"Failed to get learning status: {e}")
+            cached_improvements = 0
+            learning_active = "error"
+        
         return {
             "overview": {
                 "period_days": days,
                 "total_feedback": total_feedback,
                 "active_users": total_users_with_feedback,
                 "average_rating": round(float(avg_rating), 2) if avg_rating else 0,
-                "learning_status": "active",
-                "cached_improvements": 0
+                "learning_status": learning_active,
+                "cached_improvements": cached_improvements
             },
             "analytics": analytics,
             "insights": {
@@ -91,7 +101,7 @@ async def get_feedback_overview(
                 "daily_feedback": [],
                 "weekly_trends": []
             },
-            "learning_status": {"status": "active"},
+            "learning_status": learning_status,
             "recent_feedback": [
                 {
                     "id": fb.id,
@@ -338,18 +348,36 @@ async def apply_learning_all_types(
 ):
     """Apply learning improvements to all analysis types (admin only)"""
     try:
+        # Initialize AI learning service if not already done
+        if not ai_learning_service.initialized:
+            await ai_learning_service.initialize(db)
+        
         analysis_types = ["vulnerability_assessment", "business_impact", "patch_recommendation", "query"]
         results = {}
+        total_improvements = 0
         
         for analysis_type in analysis_types:
-            results[analysis_type] = {
-                "status": "success",
-                "improvements_applied": 0
-            }
+            try:
+                result = await ai_learning_service.apply_feedback_to_analysis_type(analysis_type)
+                results[analysis_type] = {
+                    "status": result.get("status", "success"),
+                    "improvements_applied": 1 if result.get("learning_applied") else 0,
+                    "details": result
+                }
+                if result.get("learning_applied"):
+                    total_improvements += 1
+            except Exception as e:
+                logger.error(f"Failed to apply learning for {analysis_type}: {e}")
+                results[analysis_type] = {
+                    "status": "error",
+                    "improvements_applied": 0,
+                    "error": str(e)
+                }
         
         return {
             "status": "completed",
-            "message": "Learning applied to all analysis types",
+            "message": f"Learning applied to all analysis types ({total_improvements} improvements)",
+            "total_improvements": total_improvements,
             "results": results,
             "applied_by": admin_user.email,
             "applied_at": datetime.utcnow().isoformat()

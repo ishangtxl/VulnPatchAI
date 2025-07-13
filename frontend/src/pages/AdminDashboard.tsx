@@ -178,7 +178,18 @@ const AdminDashboard: React.FC = () => {
     try {
       setRefreshing(true);
       await adminAPI.applyLearningAllTypes();
-      await loadOverview();
+      
+      
+      if (overview) {
+        setOverview({
+          ...overview,
+          overview: {
+            ...overview.overview,
+            cached_improvements: overview.overview.cached_improvements + 1 // +1 per apply learning action
+          }
+        });
+      }
+      
       setLearningDialog(false);
       setError('');
     } catch (err: any) {

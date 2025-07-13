@@ -4,6 +4,7 @@ Dashboard service
 from sqlalchemy.orm import Session
 from sqlalchemy import func, and_
 from datetime import datetime, timedelta
+import pytz
 from typing import Dict, List
 
 from app.models.scan import Scan
@@ -139,10 +140,30 @@ class DashboardService:
             .all()
         )
         
-        return [
-            TrendPoint(date=str(date), value=count)
-            for date, count in trends
-        ]
+        # Convert UTC dates to IST for display and ensure today is included
+        ist = pytz.timezone('Asia/Kolkata')
+        today_ist = datetime.now(ist).date()
+        
+        # Create a dictionary of existing data
+        data_dict = {}
+        for date, count in trends:
+            # Convert UTC date to IST date
+            utc_datetime = datetime.combine(date, datetime.min.time())
+            utc_datetime = pytz.UTC.localize(utc_datetime)
+            ist_datetime = utc_datetime.astimezone(ist)
+            ist_date = ist_datetime.date()
+            data_dict[ist_date] = count
+        
+        # Always include today's date (with 0 count if no vulnerabilities)
+        if today_ist not in data_dict:
+            data_dict[today_ist] = 0
+        
+        # Sort by date and create TrendPoint objects
+        result = []
+        for date in sorted(data_dict.keys()):
+            result.append(TrendPoint(date=str(date), value=data_dict[date]))
+        
+        return result
     
     def _get_scan_trends(self, user_id: int, start_date: datetime) -> List[TrendPoint]:
         """Get scan count trends over time"""

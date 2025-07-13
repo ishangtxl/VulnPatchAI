@@ -165,9 +165,25 @@ const Dashboard: React.FC = () => {
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={trends?.vulnerability_trends || []}>
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" />
+                <XAxis 
+                  dataKey="date" 
+                  tickFormatter={(date) => {
+                    const d = new Date(date);
+                    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                  }}
+                />
                 <YAxis />
-                <Tooltip />
+                <Tooltip 
+                  labelFormatter={(date) => {
+                    const d = new Date(date);
+                    return d.toLocaleDateString('en-US', { 
+                      weekday: 'short', 
+                      month: 'short', 
+                      day: 'numeric',
+                      year: 'numeric'
+                    });
+                  }}
+                />
                 <Line type="monotone" dataKey="value" stroke="#1976d2" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>

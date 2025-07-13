@@ -45,17 +45,24 @@ import {
   OpenInNew,
   TuneOutlined,
 } from '@mui/icons-material';
-import { vulnerabilityAPI, scanAPI, reportAPI } from '../services/api';
+import { vulnerabilityAPI, scanAPI, reportAPI, searchAPI } from '../services/api';
 import { Vulnerability, Scan, Report } from '../types';
 
 interface SearchFilters {
   dateFrom: Date | null;
   dateTo: Date | null;
   severity: string[];
-  status: string[];
-  categories: string[];
-  hosts: string[];
+  services: string[];
+  cvssMin: number | null;
+  cvssMax: number | null;
   ports: string[];
+  hasCVE: boolean | null;
+  actions: string[];
+  resourceTypes: string[];
+  hasVulnerabilities: boolean | null;
+  vulnerabilityCountMin: number | null;
+  targetHost: string;
+  ipAddress: string;
 }
 
 interface SearchResult {
@@ -72,10 +79,17 @@ const Search: React.FC = () => {
     dateFrom: null,
     dateTo: null,
     severity: [],
-    status: [],
-    categories: [],
-    hosts: [],
+    services: [],
+    cvssMin: null,
+    cvssMax: null,
     ports: [],
+    hasCVE: null,
+    actions: [],
+    resourceTypes: [],
+    hasVulnerabilities: null,
+    vulnerabilityCountMin: null,
+    targetHost: '',
+    ipAddress: '',
   });
   const [results, setResults] = useState<SearchResult>({
     vulnerabilities: [],
@@ -91,12 +105,11 @@ const Search: React.FC = () => {
 
   // Options for autocomplete filters
   const severityOptions = ['Critical', 'High', 'Medium', 'Low'];
-  const statusOptions = ['Open', 'Patched', 'Ignored', 'False Positive'];
-  const categoryOptions = ['Web Application', 'Network', 'Database', 'Operating System', 'SSL/TLS'];
+  const serviceOptions = ['HTTP', 'HTTPS', 'SSH', 'FTP', 'SMTP', 'DNS', 'MySQL', 'PostgreSQL', 'Apache', 'Nginx'];
 
   const performSearch = async () => {
     if (!searchQuery.trim() && Object.values(filters).every(f => 
-      f === null || (Array.isArray(f) && f.length === 0)
+      f === null || f === '' || (Array.isArray(f) && f.length === 0)
     )) {
       setError('Please enter a search query or apply filters');
       return;
@@ -106,42 +119,53 @@ const Search: React.FC = () => {
     setError('');
 
     try {
-      const searchParams = {
-        query: searchQuery,
-        skip: (page - 1) * pageSize,
-        limit: pageSize,
-        ...filters,
+      // Convert filters to the format expected by the backend
+      const searchFilters = {
+        severity: filters.severity.length > 0 ? filters.severity : undefined,
+        service_name: filters.services.length > 0 ? filters.services : undefined,
+        cvss_score_min: filters.cvssMin || undefined,
+        cvss_score_max: filters.cvssMax || undefined,
+        port: filters.ports.length > 0 ? filters.ports.map(p => parseInt(p)) : undefined,
+        has_cve: filters.hasCVE || undefined,
+        date_from: filters.dateFrom ? filters.dateFrom.toISOString().split('T')[0] : undefined,
+        date_to: filters.dateTo ? filters.dateTo.toISOString().split('T')[0] : undefined,
+        action: filters.actions.length > 0 ? filters.actions : undefined,
+        resource_type: filters.resourceTypes.length > 0 ? filters.resourceTypes : undefined,
+        has_vulnerabilities: filters.hasVulnerabilities || undefined,
+        vulnerability_count_min: filters.vulnerabilityCountMin || undefined,
+        target_host: filters.targetHost || undefined,
+        ip_address: filters.ipAddress || undefined,
       };
 
-      // Parallel search across all data types
+      const searchParams = {
+        query: searchQuery || undefined,
+        filters: searchFilters,
+        sort_by: 'created_at',
+        sort_order: 'desc',
+        page: page,
+        page_size: pageSize,
+      };
+
+      // Use the dedicated search API endpoints
       const [vulnResults, scanResults, reportResults] = await Promise.all([
-        vulnerabilityAPI.getVulnerabilities({
-          ...searchParams,
-          severity: filters.severity.length > 0 ? filters.severity.join(',') : undefined,
-          status: filters.status.length > 0 ? filters.status.join(',') : undefined,
-        }),
-        scanAPI.getHistory(),
+        searchAPI.searchVulnerabilities(searchParams),
+        searchAPI.searchScans(searchParams),
+        // Note: No audit logs endpoint being used yet, keeping reports fallback
         reportAPI.getReports(),
       ]);
 
-      // Filter results based on search query
-      const filteredScans = scanResults.filter(scan => 
-        !searchQuery || 
-        scan.filename.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        scan.target_hosts?.some(host => host.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-
-      const filteredReports = reportResults.filter(report =>
+      // Filter reports client-side for now (until we add reports to search API)
+      const filteredReports = reportResults.filter((report: any) =>
         !searchQuery ||
         report.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         report.description?.toLowerCase().includes(searchQuery.toLowerCase())
       );
 
       setResults({
-        vulnerabilities: vulnResults,
-        scans: filteredScans,
+        vulnerabilities: vulnResults.results || vulnResults.vulnerabilities || [],
+        scans: scanResults.results || scanResults.scans || [],
         reports: filteredReports,
-        totalResults: vulnResults.length + filteredScans.length + filteredReports.length,
+        totalResults: (vulnResults.total || 0) + (scanResults.total || 0) + filteredReports.length,
       });
     } catch (err: any) {
       setError(err.response?.data?.detail || 'Search failed');
@@ -155,10 +179,17 @@ const Search: React.FC = () => {
       dateFrom: null,
       dateTo: null,
       severity: [],
-      status: [],
-      categories: [],
-      hosts: [],
+      services: [],
+      cvssMin: null,
+      cvssMax: null,
       ports: [],
+      hasCVE: null,
+      actions: [],
+      resourceTypes: [],
+      hasVulnerabilities: null,
+      vulnerabilityCountMin: null,
+      targetHost: '',
+      ipAddress: '',
     });
     setSearchQuery('');
     setResults({
@@ -307,22 +338,22 @@ const Search: React.FC = () => {
                   />
                 </Grid>
 
-                {/* Status Filter */}
+                {/* Services Filter */}
                 <Grid item xs={12} md={6}>
                   <Autocomplete
                     multiple
-                    options={statusOptions}
-                    value={filters.status}
-                    onChange={(_, newValue) => setFilters(prev => ({ ...prev, status: newValue }))}
+                    options={serviceOptions}
+                    value={filters.services}
+                    onChange={(_, newValue) => setFilters(prev => ({ ...prev, services: newValue }))}
                     renderInput={(params) => (
-                      <TextField {...params} label="Status" placeholder="Select statuses" />
+                      <TextField {...params} label="Services" placeholder="Select services" />
                     )}
                     renderTags={(value, getTagProps) =>
                       value.map((option, index) => (
                         <Chip
                           variant="outlined"
                           label={option}
-                          color={getStatusColor(option) as any}
+                          color="primary"
                           {...getTagProps({ index })}
                         />
                       ))
@@ -330,17 +361,26 @@ const Search: React.FC = () => {
                   />
                 </Grid>
 
-                {/* Category Filter */}
+                {/* CVSS Score Range */}
                 <Grid item xs={12} md={6}>
-                  <Autocomplete
-                    multiple
-                    options={categoryOptions}
-                    value={filters.categories}
-                    onChange={(_, newValue) => setFilters(prev => ({ ...prev, categories: newValue }))}
-                    renderInput={(params) => (
-                      <TextField {...params} label="Categories" placeholder="Select categories" />
-                    )}
-                  />
+                  <Box display="flex" gap={2}>
+                    <TextField
+                      label="Min CVSS Score"
+                      type="number"
+                      value={filters.cvssMin || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, cvssMin: e.target.value ? parseFloat(e.target.value) : null }))}
+                      inputProps={{ min: 0, max: 10, step: 0.1 }}
+                      size="small"
+                    />
+                    <TextField
+                      label="Max CVSS Score"
+                      type="number"
+                      value={filters.cvssMax || ''}
+                      onChange={(e) => setFilters(prev => ({ ...prev, cvssMax: e.target.value ? parseFloat(e.target.value) : null }))}
+                      inputProps={{ min: 0, max: 10, step: 0.1 }}
+                      size="small"
+                    />
+                  </Box>
                 </Grid>
               </Grid>
             </CardContent>

@@ -70,10 +70,10 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     { text: 'Dashboard', icon: <Dashboard />, path: '/dashboard' },
     { text: 'Upload Scan', icon: <CloudUpload />, path: '/scan/upload' },
     { text: 'Scan History', icon: <History />, path: '/scan/history' },
+    { text: 'Search', icon: <Search />, path: '/search' },
     { text: 'Vulnerabilities', icon: <Security />, path: '/vulnerabilities' },
     { text: 'Reports', icon: <Assessment />, path: '/reports' },
     { text: 'AI Assistant', icon: <SmartToy />, path: '/ai-assistant' },
-    { text: 'Search', icon: <Search />, path: '/search' },
   ];
 
   // Add admin menu item if user is admin
