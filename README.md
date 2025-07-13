@@ -253,12 +253,6 @@ docker-compose logs -f
 
 ### **Report Generation**
 
-#### **Report Types**
-1. **Executive Summary**: High-level overview for management
-2. **Technical Report**: Detailed analysis for IT teams
-3. **Compliance Report**: Regulatory framework mappings
-4. **Patch Management**: Prioritized remediation guide
-
 #### **Report Contents**
 - **Vulnerability Statistics** with severity breakdown
 - **Detailed Findings** with CVE references and CVSS scores

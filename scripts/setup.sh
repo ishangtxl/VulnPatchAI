@@ -32,21 +32,12 @@ echo "SUCCESS: Created uploads directory"
 echo "Building and starting Docker containers..."
 docker-compose up -d --build
 
-# Wait for database to be ready
-echo "Waiting for database to be ready..."
-sleep 15
+# Wait for services to be ready
+echo "Waiting for services to be ready..."
+sleep 20
 
-# Run database migrations
-echo "Setting up database..."
-docker-compose exec backend python create_migration.py
-
-# Wait a bit more for services to stabilize
-echo "Waiting for services to stabilize..."
-sleep 5
-
-# Create demo user
-echo "Creating demo user..."
-docker-compose exec backend python create_demo_user.py
+echo "Services are starting up..."
+echo "Database migrations and demo user creation are handled automatically by the backend service."
 
 echo "Setup complete!"
 echo ""

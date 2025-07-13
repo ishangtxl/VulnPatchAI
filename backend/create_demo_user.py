@@ -6,6 +6,7 @@ import sys
 import time
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import OperationalError
+from sqlalchemy import text
 from app.core.database import SessionLocal
 from app.services.auth_service import AuthService
 from app.schemas.auth import UserCreate
@@ -21,7 +22,7 @@ def create_demo_user():
         try:
             db: Session = SessionLocal()
             # Test database connection
-            db.execute("SELECT 1")
+            db.execute(text("SELECT 1"))
             break
         except OperationalError as e:
             if attempt < max_retries - 1:
