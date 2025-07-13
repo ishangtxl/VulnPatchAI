@@ -15,7 +15,7 @@
 
 </div>
 
-## 🎯 Problem Statement
+## Problem Statement
 
 This project addresses the critical challenge of **automated vulnerability patch management** using Large Language Models (LLMs). Developed for the Société Générale Hackathon 2026, VulnPatch AI transforms traditional vulnerability management by:
 
@@ -24,39 +24,39 @@ This project addresses the critical challenge of **automated vulnerability patch
 - **Leveraging Google Gemini 2.5 Flash** for intelligent vulnerability analysis and remediation recommendations
 - **Providing actionable insights** through natural language processing and conversation interfaces
 
-## 🚀 Key Features
+## Key Features
 
-### 🔍 **AI-Powered Vulnerability Analysis**
+### **AI-Powered Vulnerability Analysis**
 - **Google Gemini 2.5 Flash Integration** with structured output formatting
 - **Multiple Analysis Types**: Vulnerability assessment, business impact analysis, patch prioritization
 - **Intelligent CVE Mapping** with National Vulnerability Database integration
 - **Automated CVSS Scoring** and risk categorization
 
-### 📊 **Comprehensive Dashboard & Analytics**
+### **Comprehensive Dashboard & Analytics**
 - **Real-time Security Metrics** with interactive charts
 - **Vulnerability Trend Analysis** over 30-day periods
 - **Severity Distribution Visualization** using Recharts
 - **Patch Completion Rate Tracking** and performance metrics
 
-### 🤖 **Conversational AI Assistant**
+### **Conversational AI Assistant**
 - **Natural Language Queries** about vulnerability data
 - **Conversation Memory Persistence** across sessions
 - **Context-Aware Responses** based on user's security posture
 - **Pre-built Security Questions** for quick insights
 
-### 📄 **Professional Report Generation**
+### **Professional Report Generation**
 - **PDF Reports** with executive summaries and technical details
 - **OS-Specific Remediation Commands** (Ubuntu, Windows, macOS)
 - **Risk Assessment Charts** and compliance mappings
 - **Business Impact Analysis** for stakeholder communication
 
-### 🔧 **Advanced Vulnerability Management**
+### **Advanced Vulnerability Management**
 - **Nmap XML Processing** with real-time status updates
 - **Service Version Detection** and vulnerability pattern matching
 - **Multi-Status Tracking** (open, patched, ignored, false positive)
 - **Bulk Operations** for efficient vulnerability handling
 
-## 🏗️ Architecture Overview
+## Architecture Overview
 
 ```mermaid
 graph TB
@@ -96,7 +96,7 @@ graph TB
     SERVICES --> FILES
 ```
 
-### 🛠️ **Technology Stack**
+### **Technology Stack**
 
 | Component | Technology | Purpose |
 |-----------|------------|---------|
@@ -111,7 +111,7 @@ graph TB
 | **Authentication** | JWT + bcrypt | Secure user management |
 | **Containerization** | Docker + Docker Compose | Development & deployment |
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 
@@ -172,8 +172,7 @@ docker-compose up -d --build
 # View logs
 docker-compose logs -f
 
-# Create demo user (after services are running)
-docker-compose exec backend python create_demo_user.py
+# Demo user is automatically created during setup
 ```
 
 ### 4. Access Application
@@ -183,11 +182,11 @@ docker-compose exec backend python create_demo_user.py
 - **API Documentation**: http://localhost:8000/docs
 - **Demo Credentials**: 
   - Email: `demo@vulnpatch.ai`
-  - Password: `Demo123!@#`
+  - Password: `demo123`
 
-## 📖 Usage Guide
+## Usage Guide
 
-### 🔄 **Scanning Workflow**
+### **Scanning Workflow**
 
 1. **Upload Nmap XML Files**
    - Navigate to "Upload Scan" page
@@ -211,7 +210,7 @@ docker-compose exec backend python create_demo_user.py
    - Explore Vulnerabilities page for detailed analysis
    - Use AI Assistant for natural language queries
 
-### 🔍 **Vulnerability Management**
+### **Vulnerability Management**
 
 #### **Vulnerability Status Management**
 - **Open**: Newly discovered vulnerabilities requiring attention
@@ -232,7 +231,7 @@ docker-compose exec backend python create_demo_user.py
 }
 ```
 
-### 🤖 **AI Assistant Usage**
+### **AI Assistant Usage**
 
 #### **Example Queries**
 ```plaintext
@@ -259,7 +258,7 @@ docker-compose exec backend python create_demo_user.py
 - **Risk Analysis**: Risk scoring and prioritization
 - **Compliance Mapping**: Regulatory framework alignment
 
-### 📊 **Report Generation**
+### **Report Generation**
 
 #### **Report Types**
 1. **Executive Summary**: High-level overview for management
@@ -393,7 +392,7 @@ docker-compose down -v
 docker-compose up -d --build
 ```
 
-## 🔐 Security Features
+## Security Features
 
 ### **Authentication & Authorization**
 - **JWT-based authentication** with configurable token expiration
@@ -414,7 +413,7 @@ docker-compose up -d --build
 - **Secure file storage** with access controls
 - **Audit logging** for security events and user actions
 
-## 🚀 Deployment Guide
+## Deployment Guide
 
 ### **Production Deployment**
 
@@ -470,7 +469,7 @@ async def health_check():
     }
 ```
 
-## 🧪 Testing
+## Testing
 
 ### **Backend Testing**
 ```bash
@@ -509,7 +508,7 @@ curl -X POST http://localhost:8000/api/v1/scan/upload \
   -F "file=@sample_scans/nmap_scan.xml"
 ```
 
-## 🤝 Contributing
+## Contributing
 
 ### **Development Workflow**
 1. Fork the repository
@@ -525,7 +524,7 @@ curl -X POST http://localhost:8000/api/v1/scan/upload \
 - **Git**: Conventional commit messages, feature-based branching
 - **Testing**: Maintain >80% code coverage, integration tests for workflows
 
-## 📚 Additional Resources
+## Additional Resources
 
 ### **Sample Data**
 - **Nmap XML samples** in `sample_scans/` directory
@@ -542,7 +541,7 @@ curl -X POST http://localhost:8000/api/v1/scan/upload \
 - [National Vulnerability Database API](https://nvd.nist.gov/developers)
 - [Nmap XML Output Format](https://nmap.org/book/output-formats-xml-output.html)
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### **Common Issues**
 
@@ -586,10 +585,6 @@ curl http://localhost:8000/health
 - **Slow AI responses**: Check Gemini API key and rate limits
 - **Large file uploads**: Increase file size limits in Docker/nginx
 - **Database performance**: Monitor query performance and add indexes
-
-## 📄 License
-
-This project is developed for the **Société Générale Hackathon 2026** - Vulnerability Patch Management using LLM challenge.
 
 ## 👥 Team & Acknowledgments
 

@@ -20,14 +20,14 @@ def create_migration(message="Auto migration"):
             autogenerate=True, 
             message=message
         )
-        print(f"✅ Migration '{message}' created successfully!")
+        print(f"SUCCESS: Migration '{message}' created successfully!")
         
         # Apply migration
         command.upgrade(alembic_cfg, "head")
-        print("✅ Database migration applied successfully!")
+        print("SUCCESS: Database migration applied successfully!")
         
     except Exception as e:
-        print(f"❌ Error creating migration: {e}")
+        print(f"ERROR: Error creating migration: {e}")
         sys.exit(1)
 
 if __name__ == "__main__":
