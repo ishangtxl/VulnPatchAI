@@ -48,7 +48,6 @@ This project addresses the critical challenge of **automated vulnerability patch
 - **PDF Reports** with executive summaries and technical details
 - **OS-Specific Remediation Commands** (Ubuntu, Windows, macOS)
 - **Risk Assessment Charts** and compliance mappings
-- **Business Impact Analysis** for stakeholder communication
 
 ### **Advanced Vulnerability Management**
 - **Nmap XML Processing** with real-time status updates
@@ -123,7 +122,7 @@ graph TB
 
 ```bash
 git clone <repository-url>
-cd VulnLM
+cd VulnPatchAI
 ```
 
 ### 2. Environment Setup
@@ -244,16 +243,10 @@ docker-compose logs -f
 "Which vulnerabilities should I patch first?"
 "Show me remediation steps for SSH vulnerabilities"
 "What patches are available for my Apache server?"
-
-# Business Impact
-"What's the business impact of these vulnerabilities?"
-"Calculate the risk score for my infrastructure"
-"How do these vulnerabilities affect compliance?"
 ```
 
 #### **AI Analysis Types**
-- **Vulnerability Assessment**: Comprehensive security analysis
-- **Business Impact**: Financial and operational impact evaluation  
+- **Vulnerability Assessment**: Comprehensive security analysis 
 - **Patch Recommendation**: Specific remediation guidance
 - **Risk Analysis**: Risk scoring and prioritization
 - **Compliance Mapping**: Regulatory framework alignment
@@ -267,7 +260,6 @@ docker-compose logs -f
 4. **Patch Management**: Prioritized remediation guide
 
 #### **Report Contents**
-- **Executive Summary** with business impact analysis
 - **Vulnerability Statistics** with severity breakdown
 - **Detailed Findings** with CVE references and CVSS scores
 - **Remediation Commands** for Ubuntu, Windows, and macOS
