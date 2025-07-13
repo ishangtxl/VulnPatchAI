@@ -61,9 +61,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 
-# React build (keep the build directory in repo for deployment)
-# Commented out to include build files
-# frontend/build/
+# React build artifacts should not be committed
+frontend/build/
 
 # Environment variables
 .env
@@ -82,6 +81,20 @@ htmlcov/
 .coverage
 .pytest_cache/
 
+# Development and testing files (root directory)
+test_*.py
+*_test.py
+
+# Temporary documentation files (keep only README.md and CLAUDE.md)
+*.md.tmp
+*.md.bak
+
+# One-time migration scripts (after execution)
+backend/create_*_migration.py
+
+# Empty utility directories
+frontend/utils/
+backend/uploads/reports/
 
 .claude
 CLAUDE.md
