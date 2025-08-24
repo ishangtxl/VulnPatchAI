@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   AppBar,
   Box,
-  CssBaseline,
   Drawer,
   IconButton,
   List,
@@ -83,35 +82,56 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
 
   const drawer = (
     <div>
-      <Toolbar>
-        <Typography variant="h6" noWrap component="div">
-          VulnPatch AI
-        </Typography>
+      <Toolbar sx={{ px: 2 }}>
+        <Box>
+          <Typography variant="h6" noWrap component="div">
+            VulnPatch AI
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            Secure. Analyze. Patch.
+          </Typography>
+        </Box>
       </Toolbar>
-      <List>
-        {menuItems.map((item) => (
-          <ListItem key={item.text} disablePadding>
-            <ListItemButton
-              selected={location.pathname === item.path}
-              onClick={() => navigate(item.path)}
-            >
-              <ListItemIcon>{item.icon}</ListItemIcon>
-              <ListItemText primary={item.text} />
-            </ListItemButton>
-          </ListItem>
-        ))}
+      <List sx={{ px: 1 }}>
+        {menuItems.map((item) => {
+          const selected = location.pathname === item.path;
+          return (
+            <ListItem key={item.text} disablePadding>
+              <ListItemButton
+                selected={selected}
+                onClick={() => navigate(item.path)}
+                sx={{
+                  borderRadius: 1.5,
+                  mx: 1,
+                  mb: 0.5,
+                  '&.Mui-selected': {
+                    bgcolor: (theme) => theme.palette.action.selected,
+                    '&:hover': { bgcolor: (theme) => theme.palette.action.selected },
+                  },
+                }}
+              >
+                <ListItemIcon sx={{ minWidth: 36, color: selected ? 'primary.main' : 'inherit' }}>{item.icon}</ListItemIcon>
+                <ListItemText primary={item.text} />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
     </div>
   );
 
   return (
     <Box sx={{ display: 'flex' }}>
-      <CssBaseline />
       <AppBar
         position="fixed"
+        color="inherit"
+        elevation={0}
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
+          borderBottom: 1,
+          borderColor: 'divider',
+          bgcolor: 'background.paper',
         }}
       >
         <Toolbar>
@@ -162,10 +182,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
           </Menu>
         </Toolbar>
       </AppBar>
-      <Box
-        component="nav"
-        sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}
-      >
+      <Box component="nav" sx={{ width: { sm: drawerWidth }, flexShrink: { sm: 0 } }}>
         <Drawer
           variant="temporary"
           open={mobileOpen}
@@ -195,7 +212,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
         component="main"
         sx={{
           flexGrow: 1,
-          p: 3,
+          p: { xs: 2, md: 3 },
           width: { sm: `calc(100% - ${drawerWidth}px)` },
         }}
       >

@@ -43,6 +43,7 @@ import {
   ExpandMore,
 } from '@mui/icons-material';
 import { vulnerabilityAPI } from '../services/api';
+import { getSeverityColorName } from '../styles/severity';
 import { Vulnerability } from '../types';
 import CommandBlock from '../components/CommandBlock';
 
@@ -193,20 +194,7 @@ const Vulnerabilities: React.FC = () => {
     }
   };
 
-  const getSeverityColor = (severity?: string) => {
-    switch (severity?.toLowerCase()) {
-      case 'critical':
-        return 'error';
-      case 'high':
-        return 'warning';
-      case 'medium':
-        return 'info';
-      case 'low':
-        return 'success';
-      default:
-        return 'default';
-    }
-  };
+  const getSeverityColor = (severity?: string) => getSeverityColorName(severity);
 
   const getStatusColor = (status: string) => {
     switch (status) {

@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { createTheme, ThemeProvider as MuiThemeProvider, Theme } from '@mui/material/styles';
+import { createTheme, ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
 import { PaletteMode } from '@mui/material';
 import api from '../services/api';
+import { palette, radii, shadows } from '../styles/tokens';
 
 interface ThemeContextType {
   mode: PaletteMode;
@@ -26,90 +27,125 @@ interface ThemeProviderProps {
 
 // Define light theme
 const lightTheme = createTheme({
-  palette: {
-    mode: 'light',
-    primary: {
-      main: '#1976d2',
-    },
-    secondary: {
-      main: '#dc004e',
-    },
-    background: {
-      default: '#ffffff',
-      paper: '#f5f5f5',
-    },
-    text: {
-      primary: '#212121',
-      secondary: '#757575',
-    },
-  },
+  palette: palette.light as any,
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: { fontSize: 32, lineHeight: 1.25, fontWeight: 600 },
+    h2: { fontSize: 24, lineHeight: 1.33, fontWeight: 600 },
+    h3: { fontSize: 20, lineHeight: 1.4, fontWeight: 600 },
+    body1: { fontSize: 16, lineHeight: 1.5 },
+    body2: { fontSize: 14, lineHeight: 1.45 },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: { backgroundColor: palette.light.background.default },
+        '*:focus-visible': { outline: '2px solid #5B9DFF', outlineOffset: 2 },
+      },
+    },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1976d2',
+          borderBottom: `1px solid ${palette.light.divider}`,
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: '#f5f5f5',
-          borderRight: '1px solid #e0e0e0',
+          backgroundColor: palette.light.background.paper,
+          borderRight: `1px solid ${palette.light.divider}`,
         },
       },
+    },
+    MuiCard: {
+      defaultProps: { elevation: 0 },
+      styleOverrides: {
+        root: {
+          borderRadius: radii.lg,
+          boxShadow: shadows.card,
+          border: `1px solid ${palette.light.divider}`,
+        },
+      },
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          borderRadius: radii.md,
+        },
+      },
+    },
+    MuiButton: {
+      defaultProps: { size: 'small', disableElevation: true },
+      styleOverrides: {
+        root: { borderRadius: radii.md },
+      },
+    },
+    MuiTextField: {
+      defaultProps: { size: 'small' },
+    },
+    MuiChip: {
+      defaultProps: { size: 'small' },
+    },
+    MuiTableCell: {
+      styleOverrides: { root: { paddingTop: 8, paddingBottom: 8 } },
     },
   },
 });
 
 // Define dark theme
 const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-    primary: {
-      main: '#90caf9',
-    },
-    secondary: {
-      main: '#f48fb1',
-    },
-    background: {
-      default: '#121212',
-      paper: '#1e1e1e',
-    },
-    text: {
-      primary: '#ffffff',
-      secondary: '#b3b3b3',
-    },
-  },
+  palette: palette.dark as any,
   typography: {
     fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h1: { fontSize: 32, lineHeight: 1.25, fontWeight: 600 },
+    h2: { fontSize: 24, lineHeight: 1.33, fontWeight: 600 },
+    h3: { fontSize: 20, lineHeight: 1.4, fontWeight: 600 },
+    body1: { fontSize: 16, lineHeight: 1.5 },
+    body2: { fontSize: 14, lineHeight: 1.45 },
   },
   components: {
+    MuiCssBaseline: {
+      styleOverrides: {
+        body: { backgroundColor: palette.dark.background.default },
+        '*:focus-visible': { outline: '2px solid #5B9DFF', outlineOffset: 2 },
+      },
+    },
     MuiAppBar: {
       styleOverrides: {
         root: {
-          backgroundColor: '#1e1e1e',
+          borderBottom: `1px solid ${palette.dark.divider}`,
         },
       },
     },
     MuiDrawer: {
       styleOverrides: {
         paper: {
-          backgroundColor: '#1e1e1e',
-          borderRight: '1px solid #333',
+          backgroundColor: palette.dark.background.paper,
+          borderRight: `1px solid ${palette.dark.divider}`,
         },
       },
     },
     MuiCard: {
+      defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          backgroundColor: '#1e1e1e',
+          borderRadius: radii.lg,
+          boxShadow: shadows.card,
+          border: `1px solid ${palette.dark.divider}`,
         },
       },
     },
+    MuiPaper: {
+      styleOverrides: { root: { borderRadius: radii.md } },
+    },
+    MuiButton: {
+      defaultProps: { size: 'small', disableElevation: true },
+      styleOverrides: { root: { borderRadius: radii.md } },
+    },
+    MuiTextField: { defaultProps: { size: 'small' } },
+    MuiChip: { defaultProps: { size: 'small' } },
+    MuiTableCell: { styleOverrides: { root: { paddingTop: 8, paddingBottom: 8 } } },
   },
 });
 

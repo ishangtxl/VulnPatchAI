@@ -18,6 +18,7 @@ import {
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { dashboardAPI } from '../services/api';
 import { DashboardMetrics, TrendData } from '../types';
+import { severityColorsHex } from '../styles/severity';
 
 const Dashboard: React.FC = () => {
   const [metrics, setMetrics] = useState<DashboardMetrics | null>(null);
@@ -60,18 +61,11 @@ const Dashboard: React.FC = () => {
     );
   }
 
-  const severityColors = {
-    Critical: '#d32f2f',
-    High: '#f57c00',
-    Medium: '#fbc02d',
-    Low: '#388e3c',
-  };
-
   const pieData = metrics ? [
-    { name: 'Critical', value: metrics.vulnerabilities.critical, color: severityColors.Critical },
-    { name: 'High', value: metrics.vulnerabilities.high, color: severityColors.High },
-    { name: 'Medium', value: metrics.vulnerabilities.medium, color: severityColors.Medium },
-    { name: 'Low', value: metrics.vulnerabilities.low, color: severityColors.Low },
+    { name: 'Critical', value: metrics.vulnerabilities.critical, color: severityColorsHex.critical },
+    { name: 'High', value: metrics.vulnerabilities.high, color: severityColorsHex.high },
+    { name: 'Medium', value: metrics.vulnerabilities.medium, color: severityColorsHex.medium },
+    { name: 'Low', value: metrics.vulnerabilities.low, color: severityColorsHex.low },
   ].filter(item => item.value > 0) : [];
 
   return (
@@ -184,7 +178,7 @@ const Dashboard: React.FC = () => {
                     });
                   }}
                 />
-                <Line type="monotone" dataKey="value" stroke="#1976d2" strokeWidth={2} />
+                <Line type="monotone" dataKey="value" stroke="#1E88E5" strokeWidth={2} />
               </LineChart>
             </ResponsiveContainer>
           </Paper>

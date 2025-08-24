@@ -46,6 +46,7 @@ import {
   TuneOutlined,
 } from '@mui/icons-material';
 import { vulnerabilityAPI, scanAPI, reportAPI, searchAPI } from '../services/api';
+import { getSeverityColorName } from '../styles/severity';
 import { Vulnerability, Scan, Report } from '../types';
 
 interface SearchFilters {
@@ -204,15 +205,7 @@ const Search: React.FC = () => {
     setActiveTab(newValue);
   };
 
-  const getSeverityColor = (severity?: string) => {
-    switch (severity?.toLowerCase()) {
-      case 'critical': return 'error';
-      case 'high': return 'warning';
-      case 'medium': return 'info';
-      case 'low': return 'success';
-      default: return 'default';
-    }
-  };
+  const getSeverityColor = (severity?: string) => getSeverityColorName(severity);
 
   const getStatusColor = (status: string) => {
     switch (status.toLowerCase()) {
