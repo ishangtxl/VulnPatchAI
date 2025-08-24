@@ -31,11 +31,9 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Badge,
 } from '@mui/material';
 import {
   Visibility,
-  Edit,
   Feedback,
   OpenInNew,
   Delete,
@@ -56,10 +54,10 @@ const formatTextWithBold = (text: string, lineIndex: number) => {
   const parts = [];
   let lastIndex = 0;
   let keyIndex = 0;
-  
+
   const boldRegex = /\*\*(.*?)\*\*/g;
   let match;
-  
+
   while ((match = boldRegex.exec(text)) !== null) {
     // Add text before the match
     if (match.index > lastIndex) {
@@ -70,17 +68,17 @@ const formatTextWithBold = (text: string, lineIndex: number) => {
         );
       }
     }
-    
+
     // Add bold text
     parts.push(
       <strong key={`bold-${lineIndex}-${keyIndex++}`} style={{ color: '#1976d2', fontWeight: 'bold' }}>
         {match[1]}
       </strong>
     );
-    
+
     lastIndex = match.index + match[0].length;
   }
-  
+
   // Add remaining text
   if (lastIndex < text.length) {
     const remainingText = text.substring(lastIndex);
@@ -90,7 +88,7 @@ const formatTextWithBold = (text: string, lineIndex: number) => {
       );
     }
   }
-  
+
   return parts.length > 0 ? parts : text;
 };
 
@@ -104,7 +102,7 @@ const Vulnerabilities: React.FC = () => {
   const [feedbackComment, setFeedbackComment] = useState('');
   const [deleteDialog, setDeleteDialog] = useState(false);
   const [vulnToDelete, setVulnToDelete] = useState<Vulnerability | null>(null);
-  
+
   // Filters
   const [severityFilter, setSeverityFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
@@ -225,15 +223,15 @@ const Vulnerabilities: React.FC = () => {
     vulnerabilities: group.vulnerabilities.filter((vuln: Vulnerability) => {
       // Apply severity filter
       const severityMatch = !severityFilter || vuln.severity === severityFilter;
-      
+
       // Apply status filter
       const statusMatch = !statusFilter || vuln.status === statusFilter;
-      
+
       // Apply search filter
       const searchMatch = !searchFilter ||
         vuln.service_name.toLowerCase().includes(searchFilter.toLowerCase()) ||
         vuln.description?.toLowerCase().includes(searchFilter.toLowerCase());
-      
+
       return severityMatch && statusMatch && searchMatch;
     })
   })).filter(group => group.vulnerabilities.length > 0);
@@ -255,7 +253,7 @@ const Vulnerabilities: React.FC = () => {
         <CardContent>
           <Grid container spacing={2}>
             <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
+              <FormControl fullWidth size="small">
                 <InputLabel>Severity</InputLabel>
                 <Select
                   value={severityFilter}
@@ -271,7 +269,7 @@ const Vulnerabilities: React.FC = () => {
               </FormControl>
             </Grid>
             <Grid item xs={12} sm={6} md={3}>
-              <FormControl fullWidth>
+              <FormControl fullWidth size="small">
                 <InputLabel>Status</InputLabel>
                 <Select
                   value={statusFilter}
@@ -289,6 +287,7 @@ const Vulnerabilities: React.FC = () => {
             <Grid item xs={12} sm={12} md={6}>
               <TextField
                 fullWidth
+                size="small"
                 label="Search"
                 value={searchFilter}
                 onChange={(e) => setSearchFilter(e.target.value)}
@@ -336,119 +335,119 @@ const Vulnerabilities: React.FC = () => {
             </AccordionSummary>
             <AccordionDetails>
 
-            <TableContainer component={Paper}>
-              <Table>
-                <TableHead>
-                  <TableRow>
-                    <TableCell>Service</TableCell>
-                    <TableCell>Port</TableCell>
-                    <TableCell>Severity</TableCell>
-                    <TableCell>CVE ID</TableCell>
-                    <TableCell>CVSS Score</TableCell>
-                    <TableCell>Status</TableCell>
-                    <TableCell>Actions</TableCell>
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {scanGroup.vulnerabilities.map((vuln: Vulnerability) => (
-                    <TableRow key={vuln.id}>
-                      <TableCell>
-                        <Typography variant="body2" fontWeight="bold">
-                          {vuln.service_name}
-                        </Typography>
-                        {vuln.service_version && (
-                          <Typography variant="caption" color="textSecondary">
-                            v{vuln.service_version}
-                          </Typography>
-                        )}
-                      </TableCell>
-                      <TableCell>{vuln.port}</TableCell>
-                      <TableCell>
-                        <Chip
-                          label={vuln.severity || 'Unknown'}
-                          color={getSeverityColor(vuln.severity) as any}
-                          size="small"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        {vuln.cve_id ? (
-                          <Link
-                            href={`https://nvd.nist.gov/vuln/detail/${vuln.cve_id}`}
-                            target="_blank"
-                            rel="noopener"
-                          >
-                            {vuln.cve_id}
-                            <OpenInNew sx={{ ml: 0.5, fontSize: 14 }} />
-                          </Link>
-                        ) : (
-                          'N/A'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {vuln.cvss_score ? vuln.cvss_score.toFixed(1) : 'N/A'}
-                      </TableCell>
-                      <TableCell>
-                        <FormControl size="small" sx={{ minWidth: 120 }}>
-                          <Select
-                            value={vuln.status}
-                            onChange={(e) => handleStatusUpdate(vuln.id, e.target.value)}
-                          >
-                            <MenuItem value="open">Open</MenuItem>
-                            <MenuItem value="patched">Patched</MenuItem>
-                            <MenuItem value="ignored">Ignored</MenuItem>
-                            <MenuItem value="false_positive">False Positive</MenuItem>
-                          </Select>
-                        </FormControl>
-                      </TableCell>
-                      <TableCell>
-                        <IconButton
-                          onClick={() => setSelectedVuln(vuln)}
-                          color="primary"
-                        >
-                          <Visibility />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => {
-                            setSelectedVuln(vuln);
-                            setFeedbackDialog(true);
-                          }}
-                          color="secondary"
-                        >
-                          <Feedback />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => handleRefreshCVE(vuln.id)}
-                          color="info"
-                          title="Refresh CVE Data"
-                        >
-                          <Refresh />
-                        </IconButton>
-                        <IconButton
-                          onClick={() => {
-                            setVulnToDelete(vuln);
-                            setDeleteDialog(true);
-                          }}
-                          color="error"
-                        >
-                          <Delete />
-                        </IconButton>
-                      </TableCell>
+              <TableContainer component={Paper}>
+                <Table>
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Service</TableCell>
+                      <TableCell>Port</TableCell>
+                      <TableCell>Severity</TableCell>
+                      <TableCell>CVE ID</TableCell>
+                      <TableCell>CVSS Score</TableCell>
+                      <TableCell>Status</TableCell>
+                      <TableCell>Actions</TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
+                  </TableHead>
+                  <TableBody>
+                    {scanGroup.vulnerabilities.map((vuln: Vulnerability) => (
+                      <TableRow key={vuln.id}>
+                        <TableCell>
+                          <Typography variant="body2" fontWeight="bold">
+                            {vuln.service_name}
+                          </Typography>
+                          {vuln.service_version && (
+                            <Typography variant="caption" color="textSecondary">
+                              v{vuln.service_version}
+                            </Typography>
+                          )}
+                        </TableCell>
+                        <TableCell>{vuln.port}</TableCell>
+                        <TableCell>
+                          <Chip
+                            label={vuln.severity || 'Unknown'}
+                            color={getSeverityColor(vuln.severity) as any}
+                            size="small"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          {vuln.cve_id ? (
+                            <Link
+                              href={`https://nvd.nist.gov/vuln/detail/${vuln.cve_id}`}
+                              target="_blank"
+                              rel="noopener"
+                            >
+                              {vuln.cve_id}
+                              <OpenInNew sx={{ ml: 0.5, fontSize: 14 }} />
+                            </Link>
+                          ) : (
+                            'N/A'
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {vuln.cvss_score ? vuln.cvss_score.toFixed(1) : 'N/A'}
+                        </TableCell>
+                        <TableCell>
+                          <FormControl size="small" sx={{ minWidth: 120 }}>
+                            <Select
+                              value={vuln.status}
+                              onChange={(e) => handleStatusUpdate(vuln.id, e.target.value)}
+                            >
+                              <MenuItem value="open">Open</MenuItem>
+                              <MenuItem value="patched">Patched</MenuItem>
+                              <MenuItem value="ignored">Ignored</MenuItem>
+                              <MenuItem value="false_positive">False Positive</MenuItem>
+                            </Select>
+                          </FormControl>
+                        </TableCell>
+                        <TableCell>
+                          <IconButton
+                            onClick={() => setSelectedVuln(vuln)}
+                            color="primary"
+                          >
+                            <Visibility />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => {
+                              setSelectedVuln(vuln);
+                              setFeedbackDialog(true);
+                            }}
+                            color="secondary"
+                          >
+                            <Feedback />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => handleRefreshCVE(vuln.id)}
+                            color="info"
+                            title="Refresh CVE Data"
+                          >
+                            <Refresh />
+                          </IconButton>
+                          <IconButton
+                            onClick={() => {
+                              setVulnToDelete(vuln);
+                              setDeleteDialog(true);
+                            }}
+                            color="error"
+                          >
+                            <Delete />
+                          </IconButton>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </TableContainer>
 
-            {scanGroup.vulnerabilities.length === 0 && (
-              <Box textAlign="center" py={4}>
-                <Typography variant="h6" color="textSecondary">
-                  No vulnerabilities found
-                </Typography>
-              </Box>
-            )}
+              {scanGroup.vulnerabilities.length === 0 && (
+                <Box textAlign="center" py={4}>
+                  <Typography variant="h6" color="textSecondary">
+                    No vulnerabilities found
+                  </Typography>
+                </Box>
+              )}
 
-          </AccordionDetails>
-        </Accordion>
+            </AccordionDetails>
+          </Accordion>
         ))
       )}
 
@@ -466,13 +465,13 @@ const Vulnerabilities: React.FC = () => {
               <Typography variant="h6" gutterBottom>
                 {selectedVuln.service_name} {selectedVuln.service_version}
               </Typography>
-              
+
               {selectedVuln.scan && (
                 <Typography variant="body2" color="textSecondary" sx={{ mb: 2 }}>
                   <strong>Source File:</strong> {selectedVuln.scan.original_filename || selectedVuln.scan.filename}
                 </Typography>
               )}
-              
+
               <Grid container spacing={2} sx={{ mb: 2 }}>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="textSecondary">
@@ -486,7 +485,7 @@ const Vulnerabilities: React.FC = () => {
                 </Grid>
                 <Grid item xs={6}>
                   <Typography variant="body2" color="textSecondary">
-                    <strong>Severity:</strong> 
+                    <strong>Severity:</strong>
                     <Chip
                       label={selectedVuln.severity || 'Unknown'}
                       color={getSeverityColor(selectedVuln.severity) as any}
@@ -503,7 +502,7 @@ const Vulnerabilities: React.FC = () => {
                 {selectedVuln.cve_id && (
                   <Grid item xs={12}>
                     <Typography variant="body2" color="textSecondary">
-                      <strong>CVE ID:</strong> 
+                      <strong>CVE ID:</strong>
                       <Link
                         href={`https://nvd.nist.gov/vuln/detail/${selectedVuln.cve_id}`}
                         target="_blank"
@@ -518,7 +517,7 @@ const Vulnerabilities: React.FC = () => {
                 )}
                 <Grid item xs={12}>
                   <Typography variant="body2" color="textSecondary">
-                    <strong>Status:</strong> 
+                    <strong>Status:</strong>
                     <Chip
                       label={selectedVuln.status.replace('_', ' ').toUpperCase()}
                       color={getStatusColor(selectedVuln.status) as any}
@@ -546,47 +545,62 @@ const Vulnerabilities: React.FC = () => {
                     Recommendations
                   </Typography>
                   <Box sx={{ pl: 1 }}>
-                    {selectedVuln.recommendation.split(/\n/).filter(line => line.trim()).map((line, index) => {
-                      const cleanLine = line.trim();
-                      if (!cleanLine) return null;
-                      
-                      // Check if it's a heading (starts with ## or **)
-                      if (cleanLine.startsWith('##') || cleanLine.match(/^\*\*.*\*\*$/)) {
-                        const title = cleanLine.replace(/[#*]/g, '').trim();
-                        return (
-                          <Typography key={index} variant="subtitle2" fontWeight="bold" color="primary" sx={{ mt: 2, mb: 1 }}>
-                            {title}
-                          </Typography>
-                        );
+                    {(() => {
+                      // Check if recommendation is JSON string
+                      let recommendationText = selectedVuln.recommendation || '';
+                      try {
+                        const parsedRec = JSON.parse(recommendationText);
+                        if (typeof parsedRec === 'object' && parsedRec.recommendation) {
+                          recommendationText = parsedRec.recommendation;
+                        } else if (typeof parsedRec === 'string') {
+                          recommendationText = parsedRec;
+                        }
+                      } catch {
+                        // Not JSON, use as is
                       }
-                      
-                      // Check if it's a main point (starts with * or -)
-                      if (cleanLine.match(/^[\*\-]\s/)) {
-                        const content = cleanLine.replace(/^[\*\-]\s/, '');
+
+                      return recommendationText.split(/\n/).filter(line => line.trim()).map((line, index) => {
+                        const cleanLine = line.trim();
+                        if (!cleanLine) return null;
+
+                        // Check if it's a heading (starts with ## or **)
+                        if (cleanLine.startsWith('##') || cleanLine.match(/^\*\*.*\*\*$/)) {
+                          const title = cleanLine.replace(/[#*]/g, '').trim();
+                          return (
+                            <Typography key={index} variant="subtitle2" fontWeight="bold" color="primary" sx={{ mt: 2, mb: 1 }}>
+                              {title}
+                            </Typography>
+                          );
+                        }
+
+                        // Check if it's a main point (starts with * or -)
+                        if (cleanLine.match(/^[\*\-]\s/)) {
+                          const content = cleanLine.replace(/^[\*\-]\s/, '');
+                          return (
+                            <Typography key={index} variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'flex-start' }}>
+                              <span style={{ marginRight: '8px', color: '#1976d2', fontWeight: 'bold' }}>•</span>
+                              <span>{formatTextWithBold(content, index)}</span>
+                            </Typography>
+                          );
+                        }
+
+                        // Check if it's a numbered list item
+                        if (cleanLine.match(/^\d+\./)) {
+                          return (
+                            <Typography key={index} variant="body2" sx={{ mb: 1, ml: 1 }}>
+                              {formatTextWithBold(cleanLine, index)}
+                            </Typography>
+                          );
+                        }
+
+                        // Regular text
                         return (
-                          <Typography key={index} variant="body2" sx={{ mb: 1, display: 'flex', alignItems: 'flex-start' }}>
-                            <span style={{ marginRight: '8px', color: '#1976d2', fontWeight: 'bold' }}>•</span>
-                            <span>{formatTextWithBold(content, index)}</span>
-                          </Typography>
-                        );
-                      }
-                      
-                      // Check if it's a numbered list item
-                      if (cleanLine.match(/^\d+\./)) {
-                        return (
-                          <Typography key={index} variant="body2" sx={{ mb: 1, ml: 1 }}>
+                          <Typography key={index} variant="body2" sx={{ mb: 1 }}>
                             {formatTextWithBold(cleanLine, index)}
                           </Typography>
                         );
-                      }
-                      
-                      // Regular text
-                      return (
-                        <Typography key={index} variant="body2" sx={{ mb: 1 }}>
-                          {formatTextWithBold(cleanLine, index)}
-                        </Typography>
-                      );
-                    })}
+                      });
+                    })()}
                   </Box>
                 </Box>
               )}

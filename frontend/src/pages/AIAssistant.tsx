@@ -62,14 +62,14 @@ const formatAIResponse = (content: string) => {
     const parts = [];
     let lastIndex = 0;
     let keyIndex = 0;
-    
+
     // Find all bold patterns **text**
     const boldRegex = /\*\*(.*?)\*\*/g;
     let match;
-    
+
     // Reset regex state
     boldRegex.lastIndex = 0;
-    
+
     while ((match = boldRegex.exec(text)) !== null) {
       // Add any text before this match
       if (match.index > lastIndex) {
@@ -80,17 +80,17 @@ const formatAIResponse = (content: string) => {
           );
         }
       }
-      
+
       // Add the bold text
       parts.push(
         <strong key={`bold-${lineIndex}-${keyIndex++}`} style={{ color: '#1976d2', fontWeight: 'bold' }}>
           {match[1]}
         </strong>
       );
-      
+
       lastIndex = match.index + match[0].length;
     }
-    
+
     // Add any remaining text after the last match
     if (lastIndex < text.length) {
       const remainingText = text.substring(lastIndex);
@@ -100,7 +100,7 @@ const formatAIResponse = (content: string) => {
         );
       }
     }
-    
+
     return parts.length > 0 ? parts : [text];
   };
 
@@ -108,7 +108,7 @@ const formatAIResponse = (content: string) => {
   return content.split('\n').map((line, index) => {
     const trimmedLine = line.trim();
     if (!trimmedLine) return <br key={index} />;
-    
+
     // Handle headers (### or ## or patterns like **Header:**)
     if (trimmedLine.startsWith('###')) {
       return (
@@ -117,7 +117,7 @@ const formatAIResponse = (content: string) => {
         </Typography>
       );
     }
-    
+
     if (trimmedLine.startsWith('##')) {
       return (
         <Typography key={index} variant="h5" sx={{ mt: 2, mb: 1, fontWeight: 'bold', color: 'primary.main' }}>
@@ -125,7 +125,7 @@ const formatAIResponse = (content: string) => {
         </Typography>
       );
     }
-    
+
     // Handle bold headers like **Header:** or **Section Name**
     if (/^\*\*([^\*]+)\*\*\s*:?\s*$/.test(trimmedLine)) {
       const headerText = trimmedLine.replace(/^\*\*([^\*]+)\*\*\s*:?\s*$/, '$1');
@@ -135,7 +135,7 @@ const formatAIResponse = (content: string) => {
         </Typography>
       );
     }
-    
+
     // Handle bullet points
     if (trimmedLine.match(/^[\*\-]\s/)) {
       const content = trimmedLine.replace(/^[\*\-]\s/, '');
@@ -147,7 +147,7 @@ const formatAIResponse = (content: string) => {
         </Typography>
       );
     }
-    
+
     // Handle numbered lists
     if (trimmedLine.match(/^\d+\./)) {
       return (
@@ -156,7 +156,7 @@ const formatAIResponse = (content: string) => {
         </Typography>
       );
     }
-    
+
     // Check if line has any formatting (bold text)
     if (/\*\*.*?\*\*/.test(trimmedLine)) {
       return (
@@ -165,7 +165,7 @@ const formatAIResponse = (content: string) => {
         </Typography>
       );
     }
-    
+
     // Regular text
     return (
       <Typography key={index} variant="body1" sx={{ mb: 1 }}>
@@ -221,7 +221,7 @@ const AIAssistant: React.FC = () => {
       const data = await conversationAPI.getConversations();
       console.log('Loaded conversations:', data); // Debug log
       setConversations(data);
-      
+
       // Don't auto-select any conversation - always start with a new chat
     } catch (err: any) {
       console.error('Failed to load conversations:', err);
@@ -237,7 +237,7 @@ const AIAssistant: React.FC = () => {
       setError(''); // Clear any previous errors
       const data = await conversationAPI.getConversationMessages(conversationId);
       console.log('Loaded conversation messages:', data); // Debug log
-      
+
       const formattedMessages: Message[] = data.map((msg: any) => ({
         id: msg.id.toString(),
         type: msg.role === 'user' ? 'user' : 'ai',
@@ -245,7 +245,7 @@ const AIAssistant: React.FC = () => {
         timestamp: new Date(msg.created_at),
         conversation_id: conversationId,
       }));
-      
+
       setMessages(formattedMessages);
     } catch (err: any) {
       console.error('Failed to load conversation messages:', err);
@@ -257,7 +257,13 @@ const AIAssistant: React.FC = () => {
     }
   };
 
-  const createNewConversation = () => {
+  const createNewConversation = async () => {
+    // If there's a current conversation with messages, refresh the conversation list
+    // to ensure it appears in the history before starting a new one
+    if (currentConversationId && messages.some(msg => msg.type === 'user')) {
+      await loadConversations();
+    }
+    
     setCurrentConversationId(null);
     setMessages([{
       id: '1',
@@ -277,10 +283,10 @@ const AIAssistant: React.FC = () => {
     try {
       await conversationAPI.deleteConversation(conversationId);
       await loadConversations();
-      
+
       // If deleted conversation was selected, create new conversation
       if (currentConversationId === conversationId) {
-        createNewConversation();
+        await createNewConversation();
       }
     } catch (err: any) {
       setError('Failed to delete conversation');
@@ -336,9 +342,9 @@ const AIAssistant: React.FC = () => {
       if (currentConversationId) {
         requestData.conversation_id = currentConversationId;
       }
-      
+
       const response = await aiAPI.query(requestData);
-      
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         type: 'ai',
@@ -348,7 +354,7 @@ const AIAssistant: React.FC = () => {
       };
 
       setMessages(prev => [...prev, aiMessage]);
-      
+
       // If this was a new conversation, update the current conversation ID and reload conversations
       if (!currentConversationId && response.conversation_id) {
         setCurrentConversationId(response.conversation_id);
@@ -381,7 +387,7 @@ const AIAssistant: React.FC = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={createNewConversation}
+          onClick={() => createNewConversation()}
         >
           New Chat
         </Button>
@@ -395,7 +401,7 @@ const AIAssistant: React.FC = () => {
               <History sx={{ mr: 1 }} />
               Conversation History
             </Typography>
-            
+
             {loadingConversations ? (
               <Box display="flex" justifyContent="center" p={2}>
                 <CircularProgress size={24} />
@@ -458,7 +464,7 @@ const AIAssistant: React.FC = () => {
                     </ListItemButton>
                   </ListItem>
                 ))}
-                
+
                 {conversations.length === 0 && (
                   <ListItem>
                     <ListItemText
@@ -500,8 +506,15 @@ const AIAssistant: React.FC = () => {
                     sx={{
                       p: 2,
                       maxWidth: '70%',
-                      backgroundColor: message.type === 'user' ? 'primary.main' : 'grey.100',
-                      color: message.type === 'user' ? 'white' : 'text.primary',
+                      backgroundColor: message.type === 'user'
+                        ? 'primary.main'
+                        : (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
+                      color: message.type === 'user'
+                        ? 'white'
+                        : (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'text.primary',
+                      border: (theme) => theme.palette.mode === 'dark' && message.type === 'ai'
+                        ? `1px solid ${theme.palette.grey[700]}`
+                        : 'none',
                     }}
                   >
                     <Box display="flex" alignItems="center" mb={1}>
@@ -514,7 +527,7 @@ const AIAssistant: React.FC = () => {
                         {message.type === 'ai' ? 'AI Assistant' : 'You'}
                       </Typography>
                     </Box>
-<Box component="div">
+                    <Box component="div">
                       {message.type === 'ai' ? formatAIResponse(message.content) : (
                         <Typography variant="body1">
                           {message.content}
@@ -527,10 +540,20 @@ const AIAssistant: React.FC = () => {
                   </Paper>
                 </Box>
               ))}
-              
+
               {loading && (
                 <Box display="flex" justifyContent="flex-start" mb={2}>
-                  <Paper elevation={1} sx={{ p: 2, backgroundColor: 'grey.100' }}>
+                  <Paper
+                    elevation={1}
+                    sx={{
+                      p: 2,
+                      backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.800' : 'grey.100',
+                      color: (theme) => theme.palette.mode === 'dark' ? 'grey.100' : 'text.primary',
+                      border: (theme) => theme.palette.mode === 'dark'
+                        ? `1px solid ${theme.palette.grey[700]}`
+                        : 'none',
+                    }}
+                  >
                     <Box display="flex" alignItems="center">
                       <SmartToy sx={{ mr: 1 }} />
                       <CircularProgress size={20} sx={{ mr: 2 }} />
@@ -583,7 +606,7 @@ const AIAssistant: React.FC = () => {
                   key={index}
                   button
                   onClick={() => handleSuggestedQuestion(question)}
-                  sx={{ 
+                  sx={{
                     borderRadius: 1,
                     mb: 1,
                     '&:hover': {
@@ -614,7 +637,7 @@ const AIAssistant: React.FC = () => {
               <Chip
                 label="Security Recommendations"
                 clickable
-                color="secondary"
+                color="error"
                 onClick={() => setQuery('What security improvements should I prioritize?')}
               />
               <Chip

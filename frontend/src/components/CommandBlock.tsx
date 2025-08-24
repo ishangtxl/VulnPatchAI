@@ -87,8 +87,10 @@ const CommandBlock: React.FC<CommandBlockProps> = ({ command, index }) => {
         variant="outlined"
         sx={{
           p: 2,
-          backgroundColor: '#f8f9fa',
-          border: command.is_destructive ? '1px solid #ff9800' : '1px solid #e0e0e0',
+          backgroundColor: (theme) => theme.palette.mode === 'dark' ? 'grey.900' : '#f8f9fa',
+          border: command.is_destructive 
+            ? (theme) => `1px solid ${theme.palette.warning.main}` 
+            : (theme) => `1px solid ${theme.palette.divider}`,
           position: 'relative',
         }}
       >
@@ -142,8 +144,8 @@ const CommandBlock: React.FC<CommandBlockProps> = ({ command, index }) => {
         {/* Command box */}
         <Box
           sx={{
-            backgroundColor: '#1e1e1e',
-            color: '#f8f8f2',
+            backgroundColor: (theme) => theme.palette.mode === 'dark' ? '#2a2a2a' : '#1e1e1e',
+            color: (theme) => theme.palette.mode === 'dark' ? '#e0e0e0' : '#f8f8f2',
             padding: '12px 16px',
             borderRadius: '8px',
             fontFamily: 'Monaco, Menlo, "Ubuntu Mono", monospace',
@@ -151,7 +153,9 @@ const CommandBlock: React.FC<CommandBlockProps> = ({ command, index }) => {
             lineHeight: 1.4,
             position: 'relative',
             overflow: 'auto',
-            border: command.is_destructive ? '2px solid #ff9800' : 'none',
+            border: command.is_destructive 
+              ? (theme) => `2px solid ${theme.palette.warning.main}` 
+              : (theme) => theme.palette.mode === 'dark' ? '1px solid #404040' : 'none',
           }}
         >
           <pre style={{ margin: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
@@ -166,10 +170,14 @@ const CommandBlock: React.FC<CommandBlockProps> = ({ command, index }) => {
                 position: 'absolute',
                 top: 8,
                 right: 8,
-                backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                color: '#f8f8f2',
+                backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                  ? 'rgba(255, 255, 255, 0.15)' 
+                  : 'rgba(255, 255, 255, 0.1)',
+                color: (theme) => theme.palette.mode === 'dark' ? '#e0e0e0' : '#f8f8f2',
                 '&:hover': {
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
+                  backgroundColor: (theme) => theme.palette.mode === 'dark' 
+                    ? 'rgba(255, 255, 255, 0.25)' 
+                    : 'rgba(255, 255, 255, 0.2)',
                 },
                 width: 32,
                 height: 32,

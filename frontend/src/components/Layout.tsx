@@ -124,14 +124,15 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
     <Box sx={{ display: 'flex' }}>
       <AppBar
         position="fixed"
-        color="inherit"
+        color="primary"
         elevation={0}
         sx={{
           width: { sm: `calc(100% - ${drawerWidth}px)` },
           ml: { sm: `${drawerWidth}px` },
-          borderBottom: 1,
-          borderColor: 'divider',
-          bgcolor: 'background.paper',
+          borderRadius: 0,
+          '& .MuiToolbar-root': {
+            borderRadius: 0,
+          }
         }}
       >
         <Toolbar>
@@ -140,11 +141,11 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             aria-label="open drawer"
             edge="start"
             onClick={handleDrawerToggle}
-            sx={{ mr: 2, display: { sm: 'none' } }}
+            sx={{ mr: 2, display: { sm: 'none' }, color: 'white' }}
           >
             <MenuIcon />
           </IconButton>
-          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
+          <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1, color: 'white' }}>
             {menuItems.find(item => item.path === location.pathname)?.text || 'VulnPatch AI'}
           </Typography>
           <ThemeToggle />
@@ -155,7 +156,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
             aria-controls="profile-menu"
             aria-haspopup="true"
             onClick={handleProfileMenuOpen}
-            color="inherit"
+            sx={{ color: 'white' }}
           >
             <Avatar sx={{ width: 32, height: 32 }}>
               <AccountCircle />

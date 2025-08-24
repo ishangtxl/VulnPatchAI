@@ -105,7 +105,7 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshing, setRefreshing] = useState(false);
-  
+
   // Filters for detailed feedback
   const [filters, setFilters] = useState({
     page: 1,
@@ -116,7 +116,7 @@ const AdminDashboard: React.FC = () => {
     max_rating: '',
     days: 30
   });
-  
+
   // Dialog states
   const [deleteDialog, setDeleteDialog] = useState<{ open: boolean; feedbackId: number | null }>({
     open: false,
@@ -178,8 +178,8 @@ const AdminDashboard: React.FC = () => {
     try {
       setRefreshing(true);
       await adminAPI.applyLearningAllTypes();
-      
-      
+
+
       if (overview) {
         setOverview({
           ...overview,
@@ -189,7 +189,7 @@ const AdminDashboard: React.FC = () => {
           }
         });
       }
-      
+
       setLearningDialog(false);
       setError('');
     } catch (err: any) {
@@ -201,7 +201,7 @@ const AdminDashboard: React.FC = () => {
 
   const handleDeleteFeedback = async () => {
     if (!deleteDialog.feedbackId) return;
-    
+
     try {
       await adminAPI.deleteFeedback(deleteDialog.feedbackId);
       setDeleteDialog({ open: false, feedbackId: null });
@@ -228,7 +228,7 @@ const AdminDashboard: React.FC = () => {
   const handleExportData = async () => {
     try {
       const data = await adminAPI.exportFeedbackData(filters.days);
-      
+
       // Create downloadable file
       const blob = new Blob([JSON.stringify(data.export_data, null, 2)], {
         type: 'application/json'
@@ -309,8 +309,8 @@ const AdminDashboard: React.FC = () => {
           {/* Key Metrics */}
           <Grid container spacing={3} mb={4}>
             <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
+              <Card sx={{ height: '140px' }}>
+                <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box>
                       <Typography color="textSecondary" gutterBottom>
@@ -327,8 +327,8 @@ const AdminDashboard: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
+              <Card sx={{ height: '140px' }}>
+                <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box>
                       <Typography color="textSecondary" gutterBottom>
@@ -345,8 +345,8 @@ const AdminDashboard: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
+              <Card sx={{ height: '140px' }}>
+                <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <Box display="flex" alignItems="center" justifyContent="space-between">
                     <Box>
                       <Typography color="textSecondary" gutterBottom>
@@ -363,9 +363,9 @@ const AdminDashboard: React.FC = () => {
             </Grid>
 
             <Grid item xs={12} sm={6} md={3}>
-              <Card>
-                <CardContent>
-                  <Box display="flex" alignItems="center" justifyContent="space-between">
+              <Card sx={{ height: '140px' }}>
+                <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                  <Box display="flex" alignItems="flex-start" justifyContent="space-between">
                     <Box>
                       <Typography color="textSecondary" gutterBottom>
                         Learning Status
@@ -374,8 +374,9 @@ const AdminDashboard: React.FC = () => {
                         label={overview.overview.learning_status}
                         color={overview.overview.learning_status === 'active' ? 'success' : 'warning'}
                         size="small"
+                        sx={{ mb: 1 }}
                       />
-                      <Typography variant="body2" sx={{ mt: 1 }}>
+                      <Typography variant="body2">
                         {overview.overview.cached_improvements} improvements
                       </Typography>
                     </Box>
@@ -399,7 +400,7 @@ const AdminDashboard: React.FC = () => {
                   Manage Learning
                 </Button>
               </Box>
-              
+
               <Grid container spacing={3}>
                 {Object.entries(overview.learning_status.available_analysis_types || {}).map(([type, data]: [string, any]) => (
                   <Grid item xs={12} sm={6} md={4} key={type}>
@@ -514,7 +515,7 @@ const AdminDashboard: React.FC = () => {
                   Clear Filters
                 </Button>
               </Box>
-              
+
               <Grid container spacing={2}>
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl fullWidth size="small">
@@ -531,7 +532,7 @@ const AdminDashboard: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl fullWidth size="small">
                     <InputLabel>Analysis Type</InputLabel>
@@ -547,7 +548,7 @@ const AdminDashboard: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl fullWidth size="small">
                     <InputLabel>Min Rating</InputLabel>
@@ -565,7 +566,7 @@ const AdminDashboard: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl fullWidth size="small">
                     <InputLabel>Max Rating</InputLabel>
@@ -583,7 +584,7 @@ const AdminDashboard: React.FC = () => {
                     </Select>
                   </FormControl>
                 </Grid>
-                
+
                 <Grid item xs={12} sm={6} md={2}>
                   <FormControl fullWidth size="small">
                     <InputLabel>Time Period</InputLabel>
@@ -612,7 +613,7 @@ const AdminDashboard: React.FC = () => {
                     Detailed Feedback ({detailedFeedback.pagination.total_items} total)
                   </Typography>
                 </Box>
-                
+
                 <TableContainer>
                   <Table>
                     <TableHead>
@@ -687,7 +688,7 @@ const AdminDashboard: React.FC = () => {
                     </TableBody>
                   </Table>
                 </TableContainer>
-                
+
                 {detailedFeedback.pagination.total_pages > 1 && (
                   <Box display="flex" justifyContent="center" mt={2}>
                     <Pagination
@@ -734,7 +735,7 @@ const AdminDashboard: React.FC = () => {
                 </CardContent>
               </Card>
             </Grid>
-            
+
             <Grid item xs={12} md={6}>
               <Card>
                 <CardContent>
@@ -749,7 +750,7 @@ const AdminDashboard: React.FC = () => {
                           label={value}
                           color={
                             value === 'healthy' || value === 'active' ? 'success' :
-                            value === 'low_activity' ? 'warning' : 'error'
+                              value === 'low_activity' ? 'warning' : 'error'
                           }
                           size="small"
                         />
@@ -796,8 +797,8 @@ const AdminDashboard: React.FC = () => {
           <Button onClick={() => setLearningDialog(false)}>
             Cancel
           </Button>
-          <Button 
-            onClick={handleApplyAllLearning} 
+          <Button
+            onClick={handleApplyAllLearning}
             variant="contained"
             disabled={refreshing}
             startIcon={refreshing ? <CircularProgress size={20} /> : <SmartToy />}

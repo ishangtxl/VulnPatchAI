@@ -11,8 +11,9 @@ const ThemeToggle: React.FC = () => {
       <IconButton
         color="inherit"
         onClick={toggleTheme}
-        sx={{ 
+        sx={{
           ml: 1,
+          color: 'white',
           transition: 'transform 0.3s ease-in-out',
           '&:hover': {
             transform: 'rotate(180deg)',
