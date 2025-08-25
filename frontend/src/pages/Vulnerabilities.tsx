@@ -629,7 +629,7 @@ const Vulnerabilities: React.FC = () => {
       {/* Feedback Dialog */}
       <Dialog
         open={feedbackDialog}
-        onClose={() => setFeedbackDialog(false)}
+        onClose={() => { setFeedbackDialog(false); setSelectedVuln(null); }}
         maxWidth="sm"
         fullWidth
       >
@@ -657,7 +657,7 @@ const Vulnerabilities: React.FC = () => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setFeedbackDialog(false)}>Cancel</Button>
+          <Button onClick={() => { setFeedbackDialog(false); setSelectedVuln(null); }}>Cancel</Button>
           <Button
             onClick={handleFeedbackSubmit}
             variant="contained"
