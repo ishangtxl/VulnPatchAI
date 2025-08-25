@@ -63,12 +63,9 @@ const formatAIResponse = (content: string) => {
     let lastIndex = 0;
     let keyIndex = 0;
 
-    // Find all bold patterns **text**
+    // Find all bold patterns **text** using a more robust approach
     const boldRegex = /\*\*(.*?)\*\*/g;
     let match;
-
-    // Reset regex state
-    boldRegex.lastIndex = 0;
 
     while ((match = boldRegex.exec(text)) !== null) {
       // Add any text before this match
@@ -89,6 +86,9 @@ const formatAIResponse = (content: string) => {
       );
 
       lastIndex = match.index + match[0].length;
+      
+      // Prevent infinite loops for overlapping or malformed patterns
+      if (lastIndex >= text.length) break;
     }
 
     // Add any remaining text after the last match
@@ -126,7 +126,7 @@ const formatAIResponse = (content: string) => {
       );
     }
 
-    // Handle bold headers like **Header:** or **Section Name**
+    // Handle bold headers like **Header:** (only when the line ends with just the bold text and optional colon)
     if (/^\*\*([^\*]+)\*\*\s*:?\s*$/.test(trimmedLine)) {
       const headerText = trimmedLine.replace(/^\*\*([^\*]+)\*\*\s*:?\s*$/, '$1');
       return (
@@ -137,8 +137,8 @@ const formatAIResponse = (content: string) => {
     }
 
     // Handle bullet points
-    if (trimmedLine.match(/^[\*\-]\s/)) {
-      const content = trimmedLine.replace(/^[\*\-]\s/, '');
+    if (trimmedLine.match(/^[\*\-•]\s/)) {
+      const content = trimmedLine.replace(/^[\*\-•]\s/, '');
       const formattedContent = formatText(content, index);
       return (
         <Typography key={index} variant="body2" sx={{ mb: 0.5, display: 'flex', alignItems: 'flex-start' }}>
@@ -150,9 +150,10 @@ const formatAIResponse = (content: string) => {
 
     // Handle numbered lists
     if (trimmedLine.match(/^\d+\./)) {
+      const formattedContent = formatText(trimmedLine, index);
       return (
         <Typography key={index} variant="body2" sx={{ mb: 0.5, ml: 1 }}>
-          {trimmedLine}
+          {formattedContent}
         </Typography>
       );
     }
